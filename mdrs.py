@@ -65,7 +65,11 @@ async def attach_mdr(message):
     if len(ofls) and cnl != None:
         dispname = message.author.nick
         if dispname == None: dispname = message.author.name
-        await cnl.send(content = '<@%d> >> %s'%(message.author.id, message.content), files = ofls,
+        embed = discord.Embed()
+        embed.image = ofls
+        embed.title = message.author.id
+        embed.description = message.content
+        await cnl.send(embed=embed,
             allowed_mentions=discord.AllowedMentions.none())
         if cnt:
             await message.delete()
