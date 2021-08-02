@@ -1,3 +1,1 @@
-from StudioBot.cogs.DMLogger import Core
-
-class Core(Core): pass
+from StudioBot.cogs.DMLogger import DMLogger

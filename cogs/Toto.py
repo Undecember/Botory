@@ -2,10 +2,10 @@ import discord
 from discord.ext import commands, tasks
 from StudioBot.pkgs.DBCog import DBCog
 from PIL import Image, ImageDraw, ImageFont
-from datetime import datetime
-import random, asyncio
+from datetime import datetime, timedelta
+import asyncio, uuid
 
-class Toto:
+class _Toto:
     def __init__(self, title, desc, team0, team1, guild, cog):
         self.title = title
         self.desc = desc
@@ -35,16 +35,9 @@ class Toto:
                 mxcnt += 1
         return self.cog.GetDisplayName(self.guild.get_member(mxid)), mxbet
 
-class Core(DBCog):
-    def __init__(self, app):
-        self.CogName = 'Toto'
-        self.TopRankMessage = None
-        DBCog.__init__(self, app)
-
-    def initDB(self):
-        self.DB['TotoChannel'] = None
-        self.DB['RaidChannel'] = None
-        self.DB['LastRaid'] = None
+class Toto(DBCog):
+    def __init__(self, app): DBCog.__init__(self, app)
+    def initDB(self): self.DB['TotoChannel'] = None
 
     @commands.command(name = 'totosetup')
     @commands.has_guild_permissions(administrator = True)
@@ -57,13 +50,6 @@ class Core(DBCog):
         await TotoChannel.edit(sync_permissions = True)
         await TotoChannel.set_permissions(MemberRole, send_messages = False)
 
-    @commands.command(name = 'setraidhere')
-    @commands.has_guild_permissions(administrator = True)
-    async def SetRaidHere(self, ctx, category: discord.CategoryChannel):
-        if ctx.guild.id != self.GetGlobalDB()['StoryGuildID']: return
-        await ctx.message.delete()
-        self.DB['RaidChannel'] = ctx.channel.id
-
     @commands.group(name = 'toto')
     @commands.has_guild_permissions(administrator = True)
     async def TotoGroup(self, ctx):
@@ -73,7 +59,7 @@ class Core(DBCog):
     @TotoGroup.command(name = 'new')
     async def NewToto(self, ctx, title, desc, team0, team1):
         desc = desc.replace('\\n', '\n')
-        self.toto = Toto(title, desc, team0, team1, ctx.guild, self)
+        self.toto = _Toto(title, desc, team0, team1, ctx.guild, self)
         TotoChannel = ctx.guild.get_channel(self.DB['TotoChannel'])
         TotoMessage = await TotoChannel.send('temp')
         await self.updateembed(TotoMessage)
@@ -185,102 +171,3 @@ class Core(DBCog):
         embed = discord.Embed(title = self.toto.title, description = '토토가 취소되었습니다!')
         await ctx.send(embed = embed)
         del(self.toto)
-
-    @commands.Cog.listener()
-    async def on_ready(self): self.FeverRaid.start()
-
-    @commands.command(name = 'goraid')
-    @commands.has_guild_permissions(administrator = True)
-    async def GoRaid(self, ctx, prize = None):
-        await ctx.message.delete()
-        self.prize = -1
-        if prize:
-            try: self.prize = int(prize)
-            except: pass
-        self.FeverRaid.restart()
-
-    @tasks.loop(minutes = 3)
-    async def FeverRaid(self):
-        def removemd(txt):
-            for c in '\\<:`(_*~|@': txt = txt.replace(c, '\\' + c)
-            return txt
-        guild = self.app.get_guild(self.GetGlobalDB()['StoryGuildID'])        
-        RaidChannel = guild.get_channel(self.DB['RaidChannel'])
-        if RaidChannel == None: return
-        try:
-            if self.prize: forceraid = True
-        except: forceraid = False
-        if not forceraid:
-            try:
-                if (await RaidChannel.fetch_message(RaidChannel.last_message_id)).author.bot: return
-            except: pass
-            if random.random() >= 1 / 10: return
-        aww = discord.utils.get(guild.emojis, name = 'rage_aww')
-        prize = -1
-        if forceraid:
-            prize = self.prize
-            del self.prize
-        if prize < 0:
-            prize = 2000
-            if self.DB['LastRaid']:
-                hdelta = (datetime.now() - self.DB['LastRaid']).total_seconds() / 3600
-                prize = max([int(hdelta * 4000), prize])
-        self.RaidMessage = await RaidChannel.send(embed = discord.Embed(
-            title = '도토리 레이드 도착!',
-            description = f'15초 안에 아래 이모지를 눌러서 도토리 {prize}개를 받으세요!'))
-        self.raiders = set()
-        self.on_raid = True
-        await self.RaidMessage.add_reaction(aww)
-        await asyncio.sleep(15)
-        self.DB['LastRaid'] = datetime.now()
-        self.on_raid = False
-        desc = ''
-        if len(self.raiders) == 0:
-            if prize < 4000: desc = f'아무도 도토리 {prize}개를 획득하지 못하셨습니다!'
-            else: desc = f'아무도 레이드를 성공하지 못했습니다!\n무려 {prize}개짜리였는데!'
-            await self.RaidMessage.edit(embed = discord.Embed(title = '도토리 레이드 마감~~!', description = desc))
-            return
-        self.raiders = list(self.raiders)
-        random.shuffle(self.raiders)
-        bonus = self.raiders[0]
-        boosts, normals = [], []
-        rewards = dict()
-        for raider in self.raiders[1:]:
-            if raider.premium_since: boosts.append(raider)
-            else: normals.append(raider)
-        embed = discord.Embed(title = '도토리 레이드 마감~~!', description = '')
-        if len(normals) > 0:
-            desc = ''
-            for raider in normals:
-                rewards[raider.id] = prize
-                dispname = self.GetDisplayName(raider)
-                desc += dispname + ', '
-            embed.add_field(name = f'{prize}개 획득 성공!', value = removemd(desc[:-2]), inline = False)
-        if len(boosts) > 0:
-            desc = ''
-            for raider in boosts:
-                rewards[raider.id] = round(1.5 * prize)
-                dispname = self.GetDisplayName(raider)
-                desc += dispname + ', '
-            embed.add_field(name = f'부스터 1.5배 혜택으로 {round(1.5 * prize)}개 획득 성공!', value = removemd(desc[:-2]), inline = False)
-        if bonus.premium_since:
-            rewards[bonus.id] = 3 * prize
-            embed.add_field(name = f'부스터 1.5배 혜택과 레이드 2배 당첨까지! {3 * prize}개 획득 성공!', value = '||' + removemd(self.GetDisplayName(bonus)) + '||', inline = False)
-        else:
-            rewards[bonus.id] = 2 * prize
-            embed.add_field(name = f'레이드 2배 당첨으로 {2 * prize}개 획득 성공!', value = '||' + removemd(self.GetDisplayName(bonus)) + '||', inline = False)
-        await self.RaidMessage.edit(embed = embed)
-        for userid in rewards:
-            self.GetGlobalDB('Money')['mns'][userid] = self.GetGlobalDB('Money')['mns'].get(userid, 0) + rewards[userid]
-
-    @commands.Cog.listener('on_reaction_add')
-    async def onRaidReaction(self, reaction, user):
-        try:
-            if not self.on_raid: return
-        except: return
-        if reaction.message != self.RaidMessage: return
-        if user.bot: return
-        try:
-            if reaction.emoji.name != 'rage_aww': return
-        except: return
-        self.raiders.add(user)

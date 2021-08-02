@@ -7,11 +7,8 @@ from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 from io import BytesIO
 
-class Core(DBCog):
-    def __init__(self, app):
-        self.CogName = 'Status'
-        DBCog.__init__(self, app)
-
+class Status(DBCog):
+    def __init__(self, app): DBCog.__init__(self, app)
     def initDB(self):
         self.DB['AllCount'] = None
         self.DB['MemberCount'] = None
@@ -94,7 +91,7 @@ class Core(DBCog):
         db = tuple(db)
         _bs = []
         for who in boosters:
-            _bs.append((await who.avatar_url.read(), self.GetDisplayName(who)))
+            _bs.append((await who.avatar.read(), self.GetDisplayName(who)))
         _bs = tuple(_bs)
         func = partial(self.GenImages, db, _bs)
         with ProcessPoolExecutor() as pool:
@@ -113,7 +110,7 @@ class Core(DBCog):
             key = item[0]
             img = Image.open(item[1])
             DB[key] = img
-        arng, sz = Core.GetBestArrangement(len(boosters))
+        arng, sz = Status.GetBestArrangement(len(boosters))
         img = DB['background'].resize((3000, len(arng) * sz))
         index = 0
         dy = (img.height + sz) // (len(arng) + 1)
@@ -122,7 +119,7 @@ class Core(DBCog):
             dx = (img.width + sz) // (arng[i] + 1)
             x = dx - sz
             for j in range(arng[i]):
-                img.paste(Core.GenFrame(DB, *boosters[index], sz), (x, y))
+                img.paste(Status.GenFrame(DB, *boosters[index], sz), (x, y))
                 x += dx
                 index += 1
             y += dy

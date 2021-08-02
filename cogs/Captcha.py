@@ -5,11 +5,8 @@ from captcha.image import ImageCaptcha
 import uuid, random, os
 from concurrent.futures import ProcessPoolExecutor
 
-class Core(DBCog):
-    def __init__(self, app):
-        self.CogName = 'Captcha'
-        DBCog.__init__(self, app)
-
+class Captcha(DBCog):
+    def __init__(self, app): DBCog.__init__(self, app)
     def initDB(self): return
 
     @commands.Cog.listener()

@@ -8,10 +8,8 @@ from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 from io import BytesIO
 
-class Core(DBCog):
-    def __init__(self, app):
-        self.CogName = 'Rank'
-        DBCog.__init__(self, app)
+class Rank(DBCog):
+    def __init__(self, app): DBCog.__init__(self, app)
 
     def initDB(self):
         self.DB['channel'] = None
@@ -29,7 +27,7 @@ class Core(DBCog):
         l, r = 0, 1001
         while r - l > 1:
             mid = (l + r) // 2
-            if xp < Core.level2xp(mid): r = mid
+            if xp < Rank.level2xp(mid): r = mid
             else: l = mid
         return l
 
@@ -112,7 +110,7 @@ class Core(DBCog):
         for e in lst:
             if e[0] > res['xp']: res['rank'] += 1
         res['name'] = self.GetDisplayName(who)
-        res['avatar'] = await who.avatar_url.read()
+        res['avatar'] = await who.avatar.read()
         return res
 
     @staticmethod
@@ -120,7 +118,7 @@ class Core(DBCog):
         res = Image.new("RGB", (1480 * 2 + 20, 280 * 10 + 20), (50, 50, 50))
         for i in range(len(lst)):
             data = lst[i]
-            filename = Core.GenFrame(data)
+            filename = Rank.GenFrame(data)
             img = Image.open(filename)
             os.remove(filename)
             res.paste(img, ((i // 10) * 1480, (i % 10) * 280))
@@ -134,9 +132,9 @@ class Core(DBCog):
         rank = data['rank']
         name = data['name']
         if len(name) > 9: name = name[:8] + '...'
-        level = Core.xp2level(xp)
+        level = Rank.xp2level(xp)
         if level == 1000: prop = 1
-        else: prop = (xp - Core.level2xp(level)) / (Core.level2xp(level + 1) - Core.level2xp(level))
+        else: prop = (xp - Rank.level2xp(level)) / (Rank.level2xp(level + 1) - Rank.level2xp(level))
 
         res = Image.new("RGB", (1500, 300), (50, 50, 50))
         canvas = ImageDraw.Draw(res)

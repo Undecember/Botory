@@ -3,9 +3,8 @@ from discord.ext import commands, tasks
 from StudioBot.pkgs.DBCog import DBCog
 from datetime import datetime, timezone, timedelta
 
-class Core(DBCog):
+class Logger(DBCog):
     def __init__(self, app):
-        self.CogName = 'Logger'
         self.ChannelNames = ['Reaction', 'Attachments']
         self.queue = []
         DBCog.__init__(self, app)
@@ -38,7 +37,7 @@ class Core(DBCog):
             await ctx.channel.send('Available channels : Reaction, Attachments')
             return
         if ChannelName[0] == 'R':
-            self.hook = await ctx.channel.create_webhook(name = 'BOTORY', avatar = await self.app.user.avatar_url.read())
+            self.hook = await ctx.channel.create_webhook(name = 'BOTORY', avatar = await self.app.user.avatar.read())
             self.DB[ChannelName] = (ctx.channel.id, self.hook.id)
         else: self.DB[ChannelName] = ctx.channel.id
 
@@ -54,7 +53,7 @@ class Core(DBCog):
                     description = f'Attachment from [a message]({message.jump_url}) in <#{message.channel.id}>',
                     timestamp = datetime.now(tz = timezone(timedelta(hours = 9))))
             author = message.author
-            embed.set_author(name = f'{author.name}#{author.discriminator}', icon_url = str(author.avatar_url))
+            embed.set_author(name = f'{author.name}#{author.discriminator}', icon_url = str(author.avatar.url))
             embed.add_field(name = 'User ID', value = str(author.id), inline = False)
             embed.add_field(name = 'Message ID', value = str(message.id), inline = False)
             LogChannel = message.guild.get_channel(self.DB['Attachments'])
@@ -70,7 +69,7 @@ class Core(DBCog):
             embed = discord.Embed(title = '',
                     description = f'Reaction deleted from [a message]({jump_url}) in <#{payload.channel_id}>',
                     timestamp = datetime.now(tz = timezone(timedelta(hours = 9))))
-            embed.set_author(name = f'{user.name}#{user.discriminator}', icon_url = str(user.avatar_url))
+            embed.set_author(name = f'{user.name}#{user.discriminator}', icon_url = str(user.avatar.url))
             embed.add_field(name = 'emoji', value = str(payload.emoji), inline = False)
             embed.set_thumbnail(url = payload.emoji.url)
             embed.add_field(name = 'User ID', value = str(payload.user_id), inline = False)

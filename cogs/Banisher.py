@@ -3,13 +3,9 @@ from discord.ext import commands, tasks
 from StudioBot.pkgs.DBCog import DBCog
 from datetime import datetime
 
-class Core(DBCog):
-    def __init__(self, app):
-        self.CogName = 'Banisher'
-        DBCog.__init__(self, app)
-
-    def initDB(self):
-        self.DB['ModRoles'] = []
+class Banisher(DBCog):
+    def __init__(self, app): DBCog.__init__(self, app)
+    def initDB(self): self.DB['ModRoles'] = []
 
     @commands.Cog.listener()
     async def on_ready(self):
