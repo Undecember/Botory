@@ -17,21 +17,25 @@ class RoleDropdown(discord.ui.Select):
         await interaction.response.defer()
 
 class RoleButton(discord.ui.Button):
-    def __init__(self):
-        super().__init__(style = discord.ButtonStyle.primary, label='확인')
+    def __init__(self, value, iscancel = False):
+        super().__init__(style = discord.ButtonStyle.primary, label = value)
+        self.iscancel = iscancel
     
     async def callback(self, interaction: discord.Interaction):
         assert self.view
         await interaction.response.defer()
+        self.view.confirm = not self.iscancel
         self.view.stop()
 
 class RoleSelector(discord.ui.View):
     def __init__(self, roles, user : discord.User):
         super().__init__()
         self.values = None
+        self.confirm = False
         self.user = user
         self.add_item(RoleDropdown(roles))
-        self.add_item(RoleButton())
+        self.add_item(RoleButton('확인'))
+        self.add_item(RoleButton('취소', iscancel = True))
 
     async def interaction_check(self, interaction: discord.Interaction):
         return interaction.user == self.user
@@ -48,6 +52,7 @@ class Moderator(DBCog):
         await ctx.send(embed = discord.Embed(title = 'RIP :zany_face:', description = f'**{who.name}#{who.discriminator}**'))
 
     @commands.command(name = 'bustercall', aliases = ['버스터콜', 'bc'])
+    @commands.cooldown(1, 30)
     async def BusterCall(self, ctx):
         if not ctx.guild: return
         if ctx.guild.id != self.GetGlobalDB()['StoryGuildID']: return
@@ -68,7 +73,7 @@ class Moderator(DBCog):
         msg = await ctx.send(f'<@{ctx.author.id}> 호출할 역할을 고르세요', view = view)
         while not view.is_finished(): await asyncio.sleep(0.1)
         await msg.delete()
-        if not view.values: return
+        if not view.confirm or not view.values: return
         roleid = view.values[0]
         await ctx.send(f'<@&{roleid}>')
 
