@@ -2,7 +2,7 @@ import discord, json
 from discord.ext import commands
 from StudioBot.pkgs.DBCog import DBCog
 
-class Core(DBCog):
+class MessageManager(DBCog):
     def __init__(self, app):
         self.CogName = 'MessageManager'
         DBCog.__init__(self, app)

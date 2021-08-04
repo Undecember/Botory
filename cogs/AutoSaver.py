@@ -1,3 +1,1 @@
-from StudioBot.cogs.AutoSaver import Core
-
-class Core(Core): pass
+from StudioBot.cogs.AutoSaver import AutoSaver

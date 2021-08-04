@@ -12,13 +12,9 @@ def SkipCheck(func):
         return await func(self, message)
     return wrapper
 
-class Core(DBCog):
-    def __init__(self, app):
-        self.CogName = 'Filter'
-        DBCog.__init__(self, app)
-
-    def initDB(self):
-        self.DB['ReportChannel'] = None
+class Filter(DBCog):
+    def __init__(self, app): DBCog.__init__(self, app)
+    def initDB(self): self.DB['ReportChannel'] = None
 
     @commands.command(name = 'reporthere')
     @commands.has_guild_permissions(administrator = True)
@@ -31,7 +27,7 @@ class Core(DBCog):
     @SkipCheck
     async def ModShouldBeOnline(self, message):
         if message.author.status != discord.Status.offline: return
-        if message.author.permissions_in(message.channel).manage_messages and not message.author.guild_permissions.administrator:
+        if message.channel.permissions_for(message.author).manage_messages and not message.author.guild_permissions.administrator:
             await message.channel.send(f'<@{message.author.id}> 관리자께서는 되도록이면 오프라인 상태를 해제하여 관리활동 중임을 표시해주세요.', delete_after = 10.0)
 
     @commands.Cog.listener('on_message')

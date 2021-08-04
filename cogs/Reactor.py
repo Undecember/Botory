@@ -4,11 +4,8 @@ from StudioBot.pkgs.DBCog import DBCog
 from datetime import datetime
 from typing import Union
 
-class Core(DBCog):
-    def __init__(self, app):
-        self.CogName = 'Reactor'
-        DBCog.__init__(self, app)
-
+class Reactor(DBCog):
+    def __init__(self, app): DBCog.__init__(self, app)
     def initDB(self): self.DB['ReactChannelID'] = None
 
     @commands.group(name = 'reactor')

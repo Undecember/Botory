@@ -15,7 +15,7 @@ def main():
 def InitCogs():
     for CogName in cogs.__all__:
         __import__(f'cogs.{CogName}')
-        sys.modules[f'cogs.{CogName}'].Core(app)
+        getattr(sys.modules[f'cogs.{CogName}'], CogName)(app)
 
 def GetToken():
     if os.path.isfile('token.db'):

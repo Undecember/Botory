@@ -8,7 +8,7 @@ from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 from io import BytesIO
 
-class Core(DBCog):
+class Money(DBCog):
     def __init__(self, app):
         self.CogName = 'Money'
         DBCog.__init__(self, app)
@@ -98,7 +98,7 @@ class Core(DBCog):
         for e in lst:
             if e[0] > res['money']: res['rank'] += 1
         res['name'] = self.GetDisplayName(who)
-        res['avatar'] = await who.avatar_url.read()
+        res['avatar'] = await who.avatar.read()
         return res
 
     @staticmethod
@@ -106,7 +106,7 @@ class Core(DBCog):
         res = Image.new("RGB", (1480 * 2 + 20, 280 * 10 + 20), (50, 50, 50))
         for i in range(len(lst)):
             data = lst[i]
-            filename = Core.GenFrame(data)
+            filename = Money.GenFrame(data)
             img = Image.open(filename)
             os.remove(filename)
             res.paste(img, ((i // 10) * 1480, (i % 10) * 280))
