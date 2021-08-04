@@ -24,11 +24,23 @@ class NTVote(discord.ui.View):
 
 def NewThread_Check(func):
     @wraps(func)
-    async def wrapper(self, ctx, topic):
+    async def wrapper(self, ctx, *args):
         if ctx.guild == None: return
         if ctx.guild.id != self.GetGlobalDB()['StoryGuildID']: return
         if ctx.channel.id not in self.DB['allowed']: return
         await ctx.message.delete()
+        topic = ctx.message.content[len(f'{ctx.prefix}{ctx.invoked_with}'):].strip()
+        errmsg = None
+        if not topic: errmsg = f'`{ctx.prefix}{ctx.invoked_with} (주제)` 형식으로 해주세요.'
+        if '\n' in topic: errmsg = f'주제는 한줄로 쓰세요.'
+        if not errmsg:
+            for c in '\\<:`(_*~|@':
+                if c in topic:
+                    errmsg = f'주제에는 마크다운 문자 "\{c}"를 포함하지 마세요.'
+                    break
+        if errmsg:
+            await ctx.send(errmsg, delete_after = 10.0)
+            return
         return await func(self, ctx, topic)
     return wrapper
 
@@ -57,14 +69,7 @@ class Threading(DBCog):
     @commands.command(name = 'newthread', aliases = ['새스레드', '스레드'])
     @NewThread_Check
     @commands.cooldown(1, 60)
-    async def NewThread(self, ctx, topic = None):
-        if not topic:
-            await ctx.send(f'`{ctx.prefix}{ctx.invoked_with} (주제)` 형식으로 해주세요.')
-            return
-        for c in '\\<:`(_*~|@':
-            if c in topic:
-                await ctx.send(f'주제에는 마크다운 문자 "\{c}"를 포함하지 마세요.')
-                return
+    async def NewThread(self, ctx, topic):
         voters = set()
         view = NTVote(voters)
         msg = await ctx.send(

@@ -84,6 +84,7 @@ class Raid(DBCog):
             description = f'15초 안에 아래 버튼을 눌러서 도토리 {prize}개를 받으세요!'), view = raid)
         await asyncio.sleep(15)
         raid.stop()
+        self.DB['LastRaid'] = datetime.now()
         desc = ''
         if len(raiders) == 0:
             if prize < 4000: desc = f'아무도 도토리 {prize}개를 획득하지 못하셨습니다!'

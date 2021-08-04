@@ -80,7 +80,7 @@ class Logger(DBCog):
         try:
             await self.hook.send(embeds = self.queue[:10])
             self.queue = self.queue[10:]
-        except: pass
+        except: self.queue = []
 
     @tasks.loop()
     async def Undead(self):
@@ -88,7 +88,9 @@ class Logger(DBCog):
             self.GetGlobalDB()['deadflag'].add('logger')
             self.AutoFlush.cancel()
             self.printlog('Start flushing emoji log...')
-            while self.queue: await self.flush()
+            while self.queue:
+                self.printlog(f'Log left : {len(self.queue)}')
+                await self.flush()
             self.printlog('Flushing end.')
             self.printlog('Locking member permissions...')
             perms = self.MemberRole.permissions
