@@ -53,27 +53,15 @@ class Rank(DBCog):
             await ctx.send(file = discord.File(fp), delete_after = 10.0)
         os.remove(imgpath)
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        self.StoryGuild = self.app.get_guild(self.GetGlobalDB()['StoryGuildID'])
-        self.TopRankMsg.start()
-        self.AutoRole.start()
-
     @tasks.loop(minutes = 10)
     async def TopRankMsg(self):
-        msgs = await self.RankChannel.history(limit = 20).flatten()
-        self.RankChannel = self.StoryGuild.get_channel(self.DB['channel'])
         assert self.RankChannel
+        msgs = await self.RankChannel.history(limit = 20).flatten()
         imgpath = await self.GenRankTable()
         with open(imgpath, 'rb') as fp:
             self.TopRankMessage = await self.RankChannel.send(file = discord.File(fp))
         os.remove(imgpath)
         await self.RankChannel.delete_messages(msgs)
-
-    @TopRankMsg.before_loop
-    async def ClearChannel(self):
-        self.RankChannel = self.StoryGuild.get_channel(self.DB['channel'])
-        await self.RankChannel.delete_messages(await self.RankChannel.history(limit = 20).flatten())
 
     async def GenRankTable(self):
         lst = []
@@ -246,3 +234,27 @@ class Rank(DBCog):
             has_dc = dcRole in who.roles
             if is_dc and not has_dc: await who.add_roles(dcRole)
             if not is_dc and has_dc: await who.remove_roles(dcRole)
+
+    @tasks.loop()
+    async def Undead(self):
+        if 'deadflag' in self.GetGlobalDB():
+            if self.RankChannel:
+                self.GetGlobalDB()['deadflag'].add('rank')
+                self.printlog('Closing rank channel...')
+                self.MemberRole = discord.utils.get(self.StoryGuild.roles, name = '멤버')
+                perms = discord.PermissionOverwrite(send_messages = False)
+                await self.RankChannel.edit(overwrites = {self.MemberRole : perms})
+                self.printlog('Rank channel closed.')
+                self.GetGlobalDB()['deadflag'].remove('rank')
+            self.Undead.cancel()
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        self.StoryGuild = self.app.get_guild(self.GetGlobalDB()['StoryGuildID'])
+        self.RankChannel = self.StoryGuild.get_channel(self.DB.get('channel', None))
+        self.printlog('Reopening rank channel...')
+        await self.RankChannel.edit(sync_permissions = True)
+        self.printlog('Rank channel opened.')
+        self.TopRankMsg.start()
+        self.AutoRole.start()
+        self.Undead.start()

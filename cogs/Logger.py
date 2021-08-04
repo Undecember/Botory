@@ -12,21 +12,10 @@ class Logger(DBCog):
     def initDB(self):
         for ChannelName in self.ChannelNames: self.DB[ChannelName] = None
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        self.guild = self.app.get_guild(self.GetGlobalDB()['StoryGuildID'])
-        try:
-            RLogChannel = self.guild.get_channel(self.DB['Reaction'][0])
-            for self.hook in await RLogChannel.webhooks():
-                if self.hook.id == self.DB['Reaction'][1]: break
-        except: pass
-        self.AutoFlush.start()
-        self.Undead.start()
-
     @commands.group(name = 'logger')
     @commands.has_guild_permissions(administrator = True)
     async def LoggerGroup(self, ctx):
-        if ctx.guild.id != self.guild.id: return
+        if ctx.guild.id != self.StoryGuild.id: return
         await ctx.message.delete()
         if ctx.invoked_subcommand == None:
             await ctx.channel.send('Logger system.\nSubcommands : setcnl')
@@ -61,7 +50,7 @@ class Logger(DBCog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
-        if payload.guild_id != self.guild.id: return
+        if payload.guild_id != self.StoryGuild.id: return
         user = self.app.get_user(payload.user_id)
         if user == None or user.bot: return
         if self.DB['Reaction']:
@@ -101,5 +90,27 @@ class Logger(DBCog):
             self.printlog('Start flushing emoji log...')
             while self.queue: await self.flush()
             self.printlog('Flushing end.')
+            self.printlog('Locking member permissions...')
+            perms = self.MemberRole.permissions
+            perms.update(add_reactions = False, attach_files = False)
+            await self.MemberRole.edit(permissions = perms)
+            self.printlog('Member permissions locked.')
             self.GetGlobalDB()['deadflag'].remove('logger')
             self.Undead.cancel()
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        self.StoryGuild = self.app.get_guild(self.GetGlobalDB()['StoryGuildID'])
+        try:
+            RLogChannel = self.StoryGuild.get_channel(self.DB['Reaction'][0])
+            for self.hook in await RLogChannel.webhooks():
+                if self.hook.id == self.DB['Reaction'][1]: break
+        except: pass
+        self.AutoFlush.start()
+        self.Undead.start()
+        self.printlog('Restoring member permissions...')
+        self.MemberRole = discord.utils.get(self.StoryGuild.roles, name = '멤버')
+        perms = self.MemberRole.permissions
+        perms.update(add_reactions = True, attach_files = True)
+        self.printlog('Member permissions restored.')
+        await self.MemberRole.edit(permissions = perms)

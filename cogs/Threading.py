@@ -80,3 +80,8 @@ class Threading(DBCog):
         msg = await ctx.send(embed = discord.Embed(title = '새 스레드 오픈', description = f'주제 : {topic}'))
         thread = await ctx.channel.start_thread(name = topic, message = msg)
         await thread.edit(slowmode_delay = ctx.channel.slowmode_delay)
+
+    @NewThread.error
+    async def NewThreadOnCooldown(self, ctx, error):
+        if isinstance(error, commands.CommandOnCooldown):
+            await ctx.send("스레드 명령어는 1분에 한번만 사용할 수 있습니다.", delete_after = 5.0)
