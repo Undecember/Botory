@@ -84,7 +84,7 @@ class Threading(DBCog):
         await msg.edit(content = f'{len(voters)}개의 동의를 얻어 스레드가 생성됩니다.', view = None)
         msg = await ctx.send(embed = discord.Embed(title = '새 스레드 오픈', description = f'주제 : {topic}'))
         thread = await ctx.channel.start_thread(name = topic, message = msg)
-        await thread.edit(slowmode_delay = ctx.channel.slowmode_delay)
+        await thread.edit(auto_archive_duration = 60, slowmode_delay = ctx.channel.slowmode_delay)
 
     @NewThread.error
     async def NewThreadOnCooldown(self, ctx, error):

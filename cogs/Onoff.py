@@ -8,7 +8,7 @@ class Onoff(DBCog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        version = '4.0.1'
+        version = '4.0.2'
         await self.app.change_presence(activity = discord.Game(f'Botory {version} by Undec'))
         guild = self.app.get_guild(self.GetGlobalDB()['StoryGuildID'])
         if self.DB['StopChannel']:
