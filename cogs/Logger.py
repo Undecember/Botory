@@ -111,7 +111,7 @@ class Logger(DBCog):
         self.AutoFlush.start()
         self.Undead.start()
         self.printlog('Restoring member permissions...')
-        self.MemberRole = discord.utils.get(self.StoryGuild.roles, name = '멤버')
+        self.MemberRole = self.StoryGuild.get_role(self.GetGlobalDB()['MemberRoleID'])
         perms = self.MemberRole.permissions
         perms.update(add_reactions = True, attach_files = True)
         self.printlog('Member permissions restored.')

@@ -2,94 +2,77 @@ import discord, uuid, re
 from discord.ext import commands
 from StudioBot.pkgs.DBCog import DBCog
 import asyncio
+from functools import wraps
 
-class RoleDropdown(discord.ui.Select):
-    def __init__(self, roles):
-        super().__init__(placeholder = '역할을 선택하세요')
-        for role in roles:
-            rolename = role.name
-            if len(rolename) > 25: rolename = rolename[:22] + '...'
-            self.add_option(label = rolename, value = str(role.id))
-    
-    async def callback(self, interaction: discord.Interaction):
-        assert self.view
-        self.view.values = self.values
-        await interaction.response.defer()
-
-class RoleButton(discord.ui.Button):
-    def __init__(self, value, iscancel = False):
-        super().__init__(style = discord.ButtonStyle.primary, label = value)
-        self.iscancel = iscancel
-    
-    async def callback(self, interaction: discord.Interaction):
-        assert self.view
-        await interaction.response.defer()
-        self.view.confirm = not self.iscancel
-        self.view.stop()
-
-class RoleSelector(discord.ui.View):
-    def __init__(self, roles, user : discord.User):
-        super().__init__()
-        self.values = None
-        self.confirm = False
-        self.user = user
-        self.add_item(RoleDropdown(roles))
-        self.add_item(RoleButton('확인'))
-        self.add_item(RoleButton('취소', iscancel = True))
-
-    async def interaction_check(self, interaction: discord.Interaction):
-        return interaction.user == self.user
+def ModCheck(func):
+    @wraps(func)
+    async def wrapper(self, ctx, *args, **kwargs):
+        if ctx.guild == None: return
+        if ctx.guild.id != self.GetGlobalDB()['StoryGuildID']: return
+        if not ctx.author.guild_permissions.administrator and not ctx.author == ctx.guild.owner:
+            modrole = self.StoryGuild.get_role(self.GetGlobalDB('Moderator')['ModRoleID'])
+            if modrole not in ctx.author.roles: return
+        await ctx.message.delete()
+        return await func(self, ctx, *args, **kwargs)
+    return wrapper
 
 class Moderator(DBCog):
-    def __init__(self, app): DBCog.__init__(self, app)
+    def __init__(self, app):
+        self.StoryGuild = self.MutedRole = None
+        DBCog.__init__(self, app)
 
-    def initDB(self): return
+    def initDB(self):
+        self.DB['ModRoleID'] = None
+        self.DB['MutedRoleID'] = None
 
     @commands.command(name = 'ban')
     @commands.has_guild_permissions(administrator = True)
-    async def ModBan(self, ctx, who: discord.User, reason = None):
+    async def ban(self, ctx, who: discord.User, reason = None):
+        await ctx.message.delete()
+        try:
+            if not who.dm_channel: await who.create_dm()
+            embed = discord.Embed(title = 'RIP :zany_face:', description = f'THE STORIES 서버에서 밴되셨습니다')
+            if reason: embed.add_field(name = '사유', value = reason)
+            await who.dm_channel.send(embed = embed)
+        except: pass
         await ctx.guild.ban(who, reason = reason, delete_message_days = 7)
         await ctx.send(embed = discord.Embed(title = 'RIP :zany_face:', description = f'**{who.name}#{who.discriminator}**'))
 
-    @commands.command(name = 'bustercall', aliases = ['버스터콜', 'bc'])
-    @commands.cooldown(1, 30)
-    async def BusterCall(self, ctx):
-        if not ctx.guild: return
-        if ctx.guild.id != self.GetGlobalDB()['StoryGuildID']: return
-        await ctx.message.delete()
-        roles = set()
-        for role in ctx.author.roles:
-            if role.id in self.DB:
-                for roleid in self.DB[role.id]: roles.add(roleid)
-        for roleid in list(roles):
-            roles.remove(roleid)
-            try: roles.add(ctx.guild.get_role(roleid))
-            except: pass
-        roles = list(roles)
-        if not roles:
-            await ctx.send('호출 허가된 역할이 없습니다.')
-            return
-        view = RoleSelector(roles, ctx.author)
-        msg = await ctx.send(f'<@{ctx.author.id}> 호출할 역할을 고르세요', view = view)
-        while not view.is_finished(): await asyncio.sleep(0.1)
-        await msg.delete()
-        if not view.confirm or not view.values: return
-        roleid = view.values[0]
-        await ctx.send(f'<@&{roleid}>')
-
-    @commands.command(name = 'allowcall')
+    @commands.command(name = 'setmuterole')
     @commands.has_guild_permissions(administrator = True)
-    async def AllowCall(self, ctx, role : discord.Role, *roles : discord.Role):
-        if ctx.guild.id != self.GetGlobalDB()['StoryGuildID']: return
+    async def SetMuteRole(self, ctx, role: discord.Role):
         await ctx.message.delete()
-        if role.id not in self.DB: self.DB[role.id] = set()
-        for _role in roles: self.DB[role.id].add(_role.id)
+        self.DB['MutedRoleID'] = role.id
+        self.MutedRole = role
 
-    @commands.command(name = 'denycall')
+    @commands.command(name = 'setmodrole')
     @commands.has_guild_permissions(administrator = True)
-    async def DenyCall(self, ctx, role : discord.Role, *roles : discord.Role):
-        if ctx.guild.id != self.GetGlobalDB()['StoryGuildID']: return
+    async def SetModRole(self, ctx, role: discord.Role):
         await ctx.message.delete()
-        if role.id not in self.DB: self.DB[role.id] = set()
-        for _role in roles: self.DB[role.id].discard(_role.id)
-        if not self.DB[role.id]: del self.DB[role.id]
+        self.DB['ModRoleID'] = role.id
+        self.ModRole = role
+
+    @commands.command(name = 'mute')
+    @ModCheck
+    async def mute(self, ctx, who: discord.Member, *, reason = None):
+        if not self.MutedRole: return
+        await who.add_roles(self.MutedRole, reason = reason)
+        embed = discord.Embed(title = '', description = '뮤트되었습니다')
+        embed.set_author(name = self.GetDisplayName(who), icon_url = who.avatar.url)
+        if reason: embed.add_field(name = '사유', value = reason)
+        await ctx.send(embed = embed)
+
+    @commands.command(name = 'unmute')
+    @ModCheck
+    async def unmute(self, ctx, who: discord.Member):
+        if not self.MutedRole: return
+        await who.remove_roles(self.MutedRole)
+        embed = discord.Embed(title = '', description = '언뮤트되었습니다')
+        embed.set_author(name = self.GetDisplayName(who), icon_url = who.avatar.url)
+        await ctx.send(embed = embed)
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        self.StoryGuild = self.app.get_guild(self.GetGlobalDB()['StoryGuildID'])
+        self.MutedRole = self.StoryGuild.get_role(self.DB['MutedRoleID'])
+        self.ModRole = self.StoryGuild.get_role(self.DB['ModRoleID'])

@@ -17,14 +17,14 @@ class Status(DBCog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.guild = self.app.get_guild(self.GetGlobalDB()['StoryGuildID'])
+        self.StoryGuild = self.app.get_guild(self.GetGlobalDB()['StoryGuildID'])
         self.StatusViewer.start()
         self.BoostStatus.start()
 
     @commands.group(name = 'status')
     @commands.has_guild_permissions(administrator = True)
     async def StatusGroup(self, ctx):
-        if ctx.guild.id != self.GetGlobalDB()['StoryGuildID']: return
+        if ctx.guild.id != self.StoryGuild.id: return
         await ctx.message.delete()
         if ctx.invoked_subcommand == None:
             await ctx.channel.send('Status Manager\nSubcommands : setimg, setup')
@@ -58,31 +58,31 @@ class Status(DBCog):
     @tasks.loop(minutes = 10.0)
     async def StatusViewer(self):
         MemberCount = 0
-        async for member in self.guild.fetch_members(limit = None):
+        async for member in self.StoryGuild.fetch_members(limit = None):
             if self.MemberRole in member.roles: MemberCount += 1
-        await self.AllCountChannel.edit(name = f'전체 멤버 - {self.guild.member_count}명')
+        await self.AllCountChannel.edit(name = f'전체 멤버 - {self.StoryGuild.member_count}명')
         await self.MemberCountChannel.edit(name = f'정식 멤버 - {MemberCount}명')
 
     @StatusViewer.before_loop
     async def PreStatusViewer(self):
-        self.MemberRole = discord.utils.get(self.guild.roles, name = '멤버')
-        self.AllCountChannel = self.guild.get_channel(self.DB['AllCount'])
-        self.MemberCountChannel = self.guild.get_channel(self.DB['MemberCount'])
+        self.MemberRole = self.StoryGuild.get_role(self.GetGlobalDB()['MemberRoleID'])
+        self.AllCountChannel = self.StoryGuild.get_channel(self.DB['AllCount'])
+        self.MemberCountChannel = self.StoryGuild.get_channel(self.DB['MemberCount'])
 
     @tasks.loop(minutes = 10.0)
     async def BoostStatus(self):
-        await self.BoostCountChannel.edit(name = f'{self.guild.premium_subscription_count}부스트⚬{self.guild.premium_tier}레벨⚬{len(self.guild.premium_subscribers)}명')
+        await self.BoostCountChannel.edit(name = f'{self.StoryGuild.premium_subscription_count}부스트⚬{self.StoryGuild.premium_tier}레벨⚬{len(self.StoryGuild.premium_subscribers)}명')
         msgs = await self.BoostCountChannel.history(limit = 10).flatten()
         await self.SendBoostMsgs()
         await self.BoostCountChannel.delete_messages(msgs)
 
     @BoostStatus.before_loop
     async def PreBoostStatus(self):
-        self.BoostCountChannel = self.guild.get_channel(self.DB['BoostCount'])
+        self.BoostCountChannel = self.StoryGuild.get_channel(self.DB['BoostCount'])
         await self.BoostCountChannel.delete_messages(await self.BoostCountChannel.history(limit = 6).flatten())
 
     async def SendBoostMsgs(self):
-        boosters = self.guild.premium_subscribers
+        boosters = self.StoryGuild.premium_subscribers
         db = []
         for key in self.DB['images']:
             img = BytesIO()
