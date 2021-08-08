@@ -42,18 +42,18 @@ class Toto(DBCog):
     @commands.command(name = 'totosetup')
     @commands.has_guild_permissions(administrator = True)
     async def Setup(self, ctx, category: discord.CategoryChannel):
-        if ctx.guild.id != self.GetGlobalDB()['StoryGuildID']: return
+        if ctx.guild.id != self.StoryGuild.id: return
         await ctx.message.delete()
         TotoChannel = await category.create_text_channel('토토')
         self.DB['TotoChannel'] = TotoChannel.id
-        MemberRole = discord.utils.get(ctx.guild.roles, name = '멤버')
+        MemberRole = self.StoryGuild.get_role(self.GetGlobalDB()['MemberRoleID'])
         await TotoChannel.edit(sync_permissions = True)
         await TotoChannel.set_permissions(MemberRole, send_messages = False)
 
     @commands.group(name = 'toto')
     @commands.has_guild_permissions(administrator = True)
     async def TotoGroup(self, ctx):
-        if ctx.guild.id != self.GetGlobalDB()['StoryGuildID']: return
+        if ctx.guild.id != self.StoryGuild.id: return
         await ctx.message.delete()
 
     @TotoGroup.command(name = 'new')
@@ -63,7 +63,7 @@ class Toto(DBCog):
         TotoChannel = ctx.guild.get_channel(self.DB['TotoChannel'])
         TotoMessage = await TotoChannel.send('temp')
         await self.updateembed(TotoMessage)
-        MemberRole = discord.utils.get(ctx.guild.roles, name = '멤버')
+        MemberRole = self.StoryGuild.get_role(self.GetGlobalDB()['MemberRoleID'])
         await TotoChannel.set_permissions(MemberRole, read_messages = True, send_messages = True)
         self.toto.on_bet = True
         await ctx.send(f'새로운 토토가 <#{self.DB["TotoChannel"]}>에서 시작되었습니다!')
@@ -86,11 +86,14 @@ class Toto(DBCog):
         await message.delete()
         TotoChannel, msg = message.channel, message
         balance = self.GetGlobalDB('Money')['mns'].get(msg.author.id, 0)
+        val = msg.content
         try: val = int(msg.content)
         except:
+            if val[0] not in '+-': return
             sgn = 1 if val[0] == '+' else -1
             if val[1:] == 'all': val = sgn * balance
             elif val[1:] == '0.5': val = sgn * (balance // 2)
+            else: return
         if val == 0:
             for i in range(2):
                 if msg.author.id in self.toto.bet[i]: del(self.toto.bet[i][msg.author.id])
@@ -171,3 +174,7 @@ class Toto(DBCog):
         embed = discord.Embed(title = self.toto.title, description = '토토가 취소되었습니다!')
         await ctx.send(embed = embed)
         del(self.toto)
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        self.StoryGuild = self.app.get_guild(self.GetGlobalDB()['StoryGuildID'])

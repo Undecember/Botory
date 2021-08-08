@@ -241,7 +241,7 @@ class Rank(DBCog):
             if self.RankChannel:
                 self.GetGlobalDB()['deadflag'].add('rank')
                 self.printlog('Closing rank channel...')
-                self.MemberRole = discord.utils.get(self.StoryGuild.roles, name = '멤버')
+                self.MemberRole = self.StoryGuild.get_role(self.GetGlobalDB()['MemberRoleID'])
                 perms = discord.PermissionOverwrite(send_messages = False)
                 await self.RankChannel.edit(overwrites = {self.MemberRole : perms})
                 self.printlog('Rank channel closed.')
