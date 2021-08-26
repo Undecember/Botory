@@ -1,0 +1,23 @@
+body {
+  background-image: url("bg.png");
+  background-size: 40%;
+  color: #fff;
+}
+
+button{
+  background-color: #4caf50;
+  border: none;
+  color: white;
+  margin: 20px 0px 0px 0px;
+  padding: 15px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 18px;
+  border-radius: 12px;
+}
+
+button:hover {
+  transform: scale(1.1);
+  cursor: pointer;
+}
