@@ -3,7 +3,7 @@ Description=OAuth2Bot Service
 
 [Service]
 ExecStart=/bin/bash -c '. .venv/bin/activate; python main.py > log.log 2> elog.log'
-WorkingDirectory=/home/undec/Documents/oauth2bot
+WorkingDirectory=/home/undec/Documents/Botory/oauth2
 
 [Install]
 WantedBy=multi-user.target
