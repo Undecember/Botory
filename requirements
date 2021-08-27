@@ -1,7 +1,12 @@
 git+https://github.com/Undecember/StudioBot.git
 
 captcha==0.3
+Flask==2.0.1
+flask[async]
+Flask-Discord==0.1.64
+Flask-ReCaptcha==0.4.2
 Pillow==8.2.0
 PyNaCl==1.4.0
+waitress==2.0.0
 youtube-dl==2021.6.6
 youtube-search-python==1.4.5
