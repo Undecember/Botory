@@ -3,6 +3,6 @@ __all__ = [
     'BusterCall', 'Banisher', 'Filter', 'Moderator',
     'Rank', 'Money', 'Toto', 'Raid',
     'StudioLink', 'AutoSaver', 'DMLogger',
-    'Logger', 'Captcha', 'Onoff', 'Prefix',
+    'Logger', 'Onoff', 'Prefix',
     'Reactor', 'Status',
 ]

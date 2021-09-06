@@ -29,12 +29,6 @@ class Money(DBCog):
         self.DB['channel'] = BankChannel.id
         await BankChannel.edit(sync_permissions = True, topic = '&money 를 쳐서 잔액을 확인하세요! 채팅을 치다보면 1분마다 도토리를 50개씩 얻을 수 있습니다.')
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        self.StoryGuild = self.app.get_guild(self.GetGlobalDB()['StoryGuildID'])
-        self.TopRankMsg.start()
-        self.AutoRole.start()
-
     @commands.command(name = 'money')
     async def GetMoney(self, ctx, arg: discord.Member = None):
         if ctx.guild == None: return
@@ -223,3 +217,27 @@ class Money(DBCog):
             has_rich = RichRole in who.roles
             if is_rich and not has_rich: await who.add_roles(RichRole)
             if not is_rich and has_rich: await who.remove_roles(RichRole)
+
+    @tasks.loop()
+    async def Undead(self):
+        if 'deadflag' in self.GetGlobalDB():
+            if self.RankChannel:
+                self.GetGlobalDB()['deadflag'].add('money')
+                self.printlog('Closing money channel...')
+                self.MemberRole = self.StoryGuild.get_role(self.GetGlobalDB()['MemberRoleID'])
+                perms = discord.PermissionOverwrite(send_messages = False)
+                await self.RankChannel.edit(overwrites = {self.MemberRole : perms})
+                self.printlog('Money channel closed.')
+                self.GetGlobalDB()['deadflag'].remove('money')
+            self.Undead.cancel()
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        self.StoryGuild = self.app.get_guild(self.GetGlobalDB()['StoryGuildID'])
+        self.RankChannel = self.StoryGuild.get_channel(self.DB.get('channel', None))
+        self.printlog('Reopening rank channel...')
+        await self.RankChannel.edit(sync_permissions = True)
+        self.printlog('Rank channel opened.')
+        self.TopRankMsg.start()
+        self.AutoRole.start()
+        self.Undead.start()
