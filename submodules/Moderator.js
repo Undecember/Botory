@@ -1,3 +1,4 @@
+const { ops } = require('../config.json');
 const { v4: uuid4 } = require('uuid');
 const { db } = require('../db.js');
 
@@ -8,8 +9,11 @@ function uuid4hex() {
     return buffer.toString('hex');
 }
 
-var StoryGuild;
+var StoryGuild, BanCount, BanTime;
 function _setup(client) {
+    stmt = db.prepare('SELECT value FROM global WHERE key = ?');
+    BanCount = stmt.get('BanCount').value;
+    BanTime = stmt.get('BanTime').value;
     stmt = db.prepare('SELECT id FROM guilds WHERE key = ?');
     client.guilds.fetch(stmt.get('story').id.toString()).then(g => {StoryGuild = g;});
     client.on('interactionCreate', async interaction => {
@@ -26,6 +30,7 @@ function _setup(client) {
         const { commandName } = interaction;
         if (commandName === 'warn') return await cmd_warn(interaction);
         if (commandName === 'warns') return await cmd_warns(interaction);
+        if (commandName === 'unwarn') return await cmd_unwarn(interaction);
     });
 }
 
@@ -36,33 +41,62 @@ async function cmd_ban(interaction) {
     if (interaction.isCommand()) UserId = interaction.options.getUser('user').id;
     if (interaction.isContextMenu()) UserId = interaction.targetId;
     try {
-        user = await interaction.client.users.fetch(UserId);
         reason = null;
         try { reason = interaction.options.getString('reason'); } catch {}
-        fields = []
-        if (reason != null) fields = [{ name : '사유', value : reason }];
-        try {
-            DMChannel = await user.createDM();
-            await DMChannel.send({
-                embeds: [{
-                    title: 'RIP :zany_face:',
-                    description: '당신은 The Stories 서버에서 밴되셨습니다.',
-                    fields: fields
-                }]
-            });
-        } catch {}
-        await StoryGuild.bans.create(user, { days : 7, reason : reason });
-        return await interaction.reply({
-            embeds: [{
-                title: 'RIP :zany_face:',
-                description: `${user.username}#${user.discriminator}`,
-                fields: fields
-            }]
-        });
+        return await interaction.reply(await ban(interaction.client, UserId, reason));
     } catch (e) {
         console.error(e);
         return await interaction.reply({ content: 'failed' });
     }
+}
+
+async function ban(client, UserId, reason) {
+    user = await client.users.fetch(UserId);
+    fields = []
+    if (reason != null) fields = [{ name : '사유', value : reason }];
+    try {
+        DMChannel = await user.createDM();
+        await DMChannel.send({
+            embeds: [{
+                title: 'RIP :zany_face:',
+                description: '당신은 The Stories 서버에서 밴되셨습니다.',
+                fields: fields
+            }]
+        });
+    } catch {}
+    await StoryGuild.bans.create(user, { days : 7, reason : reason });
+    return {
+        embeds: [{
+            title: 'RIP :zany_face:',
+            description: `${user.username}#${user.discriminator}`,
+            fields: fields
+        }]
+    };
+}
+
+async function cmd_unwarn(interaction) {
+    WarnId = interaction.options.getString('id');
+    stmt = db.prepare(`SELECT id, ModeratorId FROM infractions WHERE id = ?`);
+    if (stmt.all(WarnId).length == 0)
+        return await interaction.reply({
+            embeds: [{
+                description: '존재하지 않는 id입니다.',
+            }]
+        });
+    if (stmt.get(WarnId).ModeratorId != interaction.user.id
+        && ops.indexOf(interaction.user.id) < 0)
+        return await interaction.reply({
+            embeds: [{
+                description: '삭제할 권한이 없습니다.',
+            }]
+        });
+    stmt = db.prepare("DELETE FROM infractions WHERE id = ?");
+    stmt.run(WarnId);
+    return await interaction.reply({
+        embeds: [{
+            description: '경고가 삭제되었습니다.',
+        }]
+    });
 }
 
 async function cmd_warn(interaction) {
@@ -82,7 +116,7 @@ async function cmd_warn(interaction) {
     user = await interaction.client.users.fetch(UserId);
     fields = [];
     if (reason != null) fields.push();
-    interaction.reply({
+    await interaction.reply({
         embeds: [{
             author: {
                 name: `${user.username}#${user.discriminator}`,
@@ -95,6 +129,12 @@ async function cmd_warn(interaction) {
             }]
         }]
     });
+    deadline = new Date().getTime() - BanTime;
+    stmt = db.prepare(`SELECT id FROM infractions
+        WHERE UserId = ? AND timecode > ? LIMIT 5`);
+    if (stmt.all(UserId, deadline).length >= BanCount) {
+        await interaction.channel.send(await ban(interaction.client, UserId, '경고 누적'));
+    }
 }
 
 async function cmd_warns(interaction) {
@@ -111,12 +151,15 @@ async function cmd_warns(interaction) {
         });
     }
     user = await interaction.client.users.fetch(UserId);
-    interaction.reply({
+    desc = '';
+    if (fields.length == 0) desc = '경고가 없습니다.';
+    await interaction.reply({
         embeds: [{
             author: {
                 name: `${user.username}#${user.discriminator}`,
                 iconURL: user.displayAvatarURL()
             },
+            description: desc,
             fields: fields
         }]
     });

@@ -32,6 +32,37 @@
             ]
         },
         {
+            "name": "unwarn",
+            "type": 1,
+            "description": "경고를 삭제합니다.",
+            "options": [
+                {
+                    "name": "id",
+                    "type": "STRING",
+                    "description": "경고 id",
+                    "required": true
+                }
+            ],
+            "defaultPermission": false,
+            "permissions": [
+                {
+                    "id": "751073808223305750",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "603897276410101789",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "923199861879365632",
+                    "type": "ROLE",
+                    "permission": true
+                }
+            ]
+        },
+        {
             "name": "warn",
             "type": 1,
             "description": "사용자를 경고합니다.",
