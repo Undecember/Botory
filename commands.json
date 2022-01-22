@@ -1,6 +1,112 @@
 {
     "commands": [
         {
+            "name": "delete",
+            "type": 3,
+            "defaultPermission": false,
+            "permissions": [
+                {
+                    "id": "751073808223305750",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "603897276410101789",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "923199861879365632",
+                    "type": "ROLE",
+                    "permission": true
+                }
+            ]
+        },
+        {
+            "name": "mute",
+            "type": 1,
+            "description": "사용자를 뮤트합니다.",
+            "options": [
+                {
+                    "name": "user",
+                    "type": "USER",
+                    "description": "뮤트할 사용자",
+                    "required": true
+                }
+            ],
+            "defaultPermission": false,
+            "permissions": [
+                {
+                    "id": "751073808223305750",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "603897276410101789",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "923199861879365632",
+                    "type": "ROLE",
+                    "permission": true
+                }
+            ]
+        },
+        {
+            "name": "mute",
+            "type": 2,
+            "defaultPermission": false,
+            "permissions": [
+                {
+                    "id": "751073808223305750",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "603897276410101789",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "923199861879365632",
+                    "type": "ROLE",
+                    "permission": true
+                }
+            ]
+        },
+        {
+            "name": "unmute",
+            "type": 1,
+            "description": "사용자를 뮤트 해제합니다.",
+            "options": [
+                {
+                    "name": "user",
+                    "type": "USER",
+                    "description": "뮤트 해제할 사용자",
+                    "required": true
+                }
+            ],
+            "defaultPermission": false,
+            "permissions": [
+                {
+                    "id": "751073808223305750",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "603897276410101789",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "923199861879365632",
+                    "type": "ROLE",
+                    "permission": true
+                }
+            ]
+        },
+        {
             "name": "report",
             "type": 2,
             "defaultPermission": true

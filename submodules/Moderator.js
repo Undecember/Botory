@@ -9,25 +9,24 @@ function uuid4hex() {
     return buffer.toString('hex');
 }
 
-var StoryGuild, BanCount, BanTime;
+var StoryGuild, BanCount, BanTime, MuteRole;
 function _setup(client) {
     stmt = db.prepare('SELECT value FROM global WHERE key = ?');
     BanCount = stmt.get('BanCount').value;
     BanTime = stmt.get('BanTime').value;
+    stmt = db.prepare('SELECT id FROM roles WHERE key = ?');
+    const MuteRoleId = stmt.get('mute').id;
     stmt = db.prepare('SELECT id FROM guilds WHERE key = ?');
-    client.guilds.fetch(stmt.get('story').id.toString()).then(g => {StoryGuild = g;});
-    client.on('interactionCreate', async interaction => {
-        const { commandName } = interaction;
-        if (commandName === 'ban') {
-            if (interaction.isCommand())
-                return await cmd_ban(interaction);
-            if (interaction.isContextMenu())
-                return await cmd_ban(interaction);
-        }
+    client.guilds.fetch(stmt.get('story').id.toString()).then(async guild => {
+        StoryGuild = guild;
+        MuteRole = await StoryGuild.roles.fetch(MuteRoleId.toString());
     });
     client.on('interactionCreate', async interaction => {
-        if (!interaction.isCommand()) return;
         const { commandName } = interaction;
+        if (commandName === 'delete') return await cmd_delete(interaction);
+        if (commandName === 'ban') return await cmd_ban(interaction);
+        if (commandName === 'mute') return await cmd_mute(interaction);
+        if (commandName === 'unmute') return await cmd_unmute(interaction);
         if (commandName === 'warn') return await cmd_warn(interaction);
         if (commandName === 'warns') return await cmd_warns(interaction);
         if (commandName === 'unwarn') return await cmd_unwarn(interaction);
@@ -35,6 +34,52 @@ function _setup(client) {
 }
 
 module.exports = { _setup };
+
+async function cmd_delete(interaction) {
+    try {
+        message = await interaction.channel.messages.fetch(interaction.targetId);
+        await message.delete();
+        return await interaction.reply(
+            { content : '삭제되었습니다.', ephemeral : true });
+    } catch (e) {
+        console.error(e);
+        return await interaction.reply({ content: 'failed' });
+    }
+}
+
+async function cmd_mute(interaction) {
+    UserId = null;
+    if (interaction.isCommand()) UserId = interaction.options.getUser('user').id;
+    if (interaction.isContextMenu()) UserId = interaction.targetId;
+    try {
+        member = await StoryGuild.members.fetch(UserId);
+        await member.roles.add(MuteRole);
+        return await interaction.reply({
+            embeds: [{
+                author: {
+                    name: `${member.user.username}#${member.user.discriminator}`,
+                    iconURL: member.user.displayAvatarURL()
+                },
+                title: '뮤트'
+            }]
+        });
+    } catch (e) {
+        console.error(e);
+        return await interaction.reply({ content: 'failed' });
+    }
+}
+
+async function cmd_unmute(interaction) {
+    UserId = interaction.options.getUser('user').id;
+    try {
+        member = await StoryGuild.members.fetch(UserId);
+        await member.roles.remove(MuteRole);
+        return await interaction.reply({ content: '뮤트 해제되었습니다.' });
+    } catch (e) {
+        console.error(e);
+        return await interaction.reply({ content: 'failed' });
+    }
+}
 
 async function cmd_ban(interaction) {
     UserId = null;

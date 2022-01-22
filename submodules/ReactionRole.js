@@ -8,14 +8,13 @@ var StoryGuild;
 function _setup(client) {
     stmt = db.prepare("SELECT id FROM guilds WHERE key = ?");
     const StoryGuildId = stmt.get('story').id;
-    client.guilds.fetch(StoryGuildId.toString()).then(guild => {
+    client.guilds.fetch(StoryGuildId.toString()).then(async guild => {
         StoryGuild = guild;
         stmt = db.prepare("SELECT ChannelId, MessageId FROM ReactionRoles");
-        for (row of stmt.all()) try {
+        for (row of stmt.all()) 
             StoryGuild.channels.fetch(row.ChannelId.toString()).then(async channel => {
-                await channel.messages.fetch(row.MessageId);
-            });
-        } catch (e) { console.error(e); }
+                await channel.messages.fetch(row.MessageId.toString());
+            }).catch(console.error);
     });
     client.on('messageReactionAdd', async (messageReaction, user) => {
         try { return await onReaction(messageReaction, user, 'ADD'); } catch {}
@@ -29,11 +28,19 @@ module.exports = { _setup };
 
 async function onReaction(messageReaction, user, type) {
     EmojiId = messageReaction.emoji.id;
+    EmojiName = messageReaction.emoji.name;
     MessageId = messageReaction.message.id;
     ChannelId = messageReaction.message.channel.id;
-    stmt = db.prepare(`SELECT RoleId FROM ReactionRoles
-        WHERE ChannelId = ? AND MessageId = ? AND EmojiId = ?`);
-    rule = stmt.get(ChannelId, MessageId, EmojiId);
+    rule = null;
+    if (EmojiId != null) {
+        stmt = db.prepare(`SELECT RoleId FROM ReactionRoles
+            WHERE ChannelId = ? AND MessageId = ? AND EmojiId = ?`);
+        rule = stmt.get(ChannelId, MessageId, EmojiId);
+    } else {
+        stmt = db.prepare(`SELECT RoleId FROM ReactionRoles
+            WHERE ChannelId = ? AND MessageId = ? AND EmojiId is NULL AND EmojiName = ?`);
+        rule = stmt.get(ChannelId, MessageId, EmojiName);
+    }
     if (rule == null) return;
     member = null;
     try { member = await StoryGuild.members.fetch(user.id); } catch { }

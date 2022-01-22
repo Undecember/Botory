@@ -24,7 +24,6 @@ async function cmd_message(interaction) {
             link = interaction.options.getString('link');
             message = await MessageFromLink(interaction.client, link);
             MessageData = await DataFromMessage(message);
-            console.log(MessageData);
             await interaction.channel.send(MessageData);
             return await interaction.reply({ content: 'Message sent!', ephemeral: true });
         }
