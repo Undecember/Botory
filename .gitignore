@@ -1,3 +1,5 @@
+logs
+ltlogs
 chromedriver
 *.db
 *.db-journal

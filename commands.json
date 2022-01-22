@@ -1,6 +1,16 @@
 {
     "commands": [
         {
+            "name": "report",
+            "type": 2,
+            "defaultPermission": true
+        },
+        {
+            "name": "report",
+            "type": 3,
+            "defaultPermission": true
+        },
+        {
             "name": "warns",
             "type": 1,
             "description": "경고기록을 확인합니다.",
@@ -9,6 +19,37 @@
                     "name": "user",
                     "type": "USER",
                     "description": "확인할 사용자",
+                    "required": true
+                }
+            ],
+            "defaultPermission": false,
+            "permissions": [
+                {
+                    "id": "751073808223305750",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "603897276410101789",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "923199861879365632",
+                    "type": "ROLE",
+                    "permission": true
+                }
+            ]
+        },
+        {
+            "name": "unwarn",
+            "type": 1,
+            "description": "경고를 삭제합니다.",
+            "options": [
+                {
+                    "name": "id",
+                    "type": "STRING",
+                    "description": "경고 id",
                     "required": true
                 }
             ],

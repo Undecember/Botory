@@ -15,7 +15,7 @@ function _setup(client) {
     });
 }
 
-module.exports = { _setup };
+module.exports = { _setup, DataFromMessage };
 
 async function cmd_message(interaction) {
     cmd = interaction.options.getSubcommand();
