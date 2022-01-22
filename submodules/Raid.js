@@ -77,7 +77,7 @@ async function AutoRaidMsg(client) {
 
 async function CheckActive(user, msgs) {
     chk = msgs.filter(m => m.author.id == user.id);
-    if (chk.length == 0) return false;
+    if (chk.size == 0) return false;
     return Date.now() - chk.first().createdAt < 5 * 60 * 1000;
 }
 

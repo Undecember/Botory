@@ -1,4 +1,3 @@
-const { spawn } = require('child_process');
 const fs = require('fs');
 const { v4: uuid4 } = require('uuid');
 const { db } = require('../db.js');
@@ -28,6 +27,18 @@ async function cmd_message(interaction) {
             console.log(MessageData);
             await interaction.channel.send(MessageData);
             return await interaction.reply({ content: 'Message sent!', ephemeral: true });
+        }
+        if (cmd == 'json') {
+            link = interaction.options.getString('link');
+            message = await MessageFromLink(interaction.client, link);
+            data = { content : message.content, embeds : message.embeds };
+            JsonFileName = `${uuid4()}.json`;
+            fs.writeFileSync(JsonFileName, JSON.stringify(data, null, 2));
+            res = await interaction.reply({
+                files: [{ attachment: JsonFileName }]
+            });
+            fs.unlinkSync(data);
+            return res;
         }
         if (cmd == 'edit') {
             olink = interaction.options.getString('olink');

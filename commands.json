@@ -305,6 +305,19 @@
             "description": "메시지",
             "options": [
                 {
+                    "name": "json",
+                    "type": 1,
+                    "description": "메시지에서 json 데이터를 불러옵니다.",
+                    "options": [
+                        {
+                            "name": "link",
+                            "type": "STRING",
+                            "description": "참조 메시지 링크",
+                            "required": true
+                        }
+                    ]
+                },
+                {
                     "name": "send",
                     "type": 1,
                     "description": "메시지를 보냅니다.",
