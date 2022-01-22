@@ -1,6 +1,16 @@
 {
     "commands": [
         {
+            "name": "report",
+            "type": 2,
+            "defaultPermission": true
+        },
+        {
+            "name": "report",
+            "type": 3,
+            "defaultPermission": true
+        },
+        {
             "name": "warns",
             "type": 1,
             "description": "경고기록을 확인합니다.",
