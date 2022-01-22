@@ -23,14 +23,17 @@ function _setup(client) {
     });
     client.on('interactionCreate', async interaction => {
         const { commandName } = interaction;
-        if (commandName === 'delete') return await cmd_delete(interaction);
-        if (commandName === 'ban') return await cmd_ban(interaction);
-        if (commandName === 'mute') return await cmd_mute(interaction);
-        if (commandName === 'unmute') return await cmd_unmute(interaction);
-        if (commandName === 'warn') return await cmd_warn(interaction);
-        if (commandName === 'warns') return await cmd_warns(interaction);
-        if (commandName === 'unwarn') return await cmd_unwarn(interaction);
+        try {
+            if (commandName === 'delete') return await cmd_delete(interaction);
+            if (commandName === 'ban') return await cmd_ban(interaction);
+            if (commandName === 'mute') return await cmd_mute(interaction);
+            if (commandName === 'unmute') return await cmd_unmute(interaction);
+            if (commandName === 'warn') return await cmd_warn(interaction);
+            if (commandName === 'warns') return await cmd_warns(interaction);
+            if (commandName === 'unwarn') return await cmd_unwarn(interaction);
+        } catch (e) { console.error(e); }
     });
+    client.on('reactionAdd', async interaction => {
 }
 
 module.exports = { _setup };

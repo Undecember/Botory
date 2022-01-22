@@ -65,22 +65,23 @@ async function RequestTop(client, pivot) {
 }
 
 async function RequestFrame(client, StoryGuild, id, pivot) {
-    const stmt = db.prepare(
-        `SELECT ${pivot}, _rank FROM ( ` +
-            `SELECT id, ${pivot}, ` +
-                `RANK() OVER (ORDER BY ${pivot} DESC) _rank ` +
-            `FROM users WHERE in_guild = 1 ` +
-        `) WHERE id = ?`
-    );
-    if (row == null) return null;
-    try { member = await StoryGuild.members.fetch(id.toString()); }
-    catch { return null; }
-    avatar = member.user.avatarURL(true);
-    if (avatar === null) avatar = member.user.defaultAvatarURL;
-    row = stmt.get(id);
-    res = { 'rank': row._rank.toString(), 'name': member.displayName, 'AvatarUrl': avatar };
-    res[pivot] = row[pivot].toString();
-    return res;
+    try {
+        const stmt = db.prepare(
+            `SELECT ${pivot}, _rank FROM ( ` +
+                `SELECT id, ${pivot}, ` +
+                    `RANK() OVER (ORDER BY ${pivot} DESC) _rank ` +
+                `FROM users WHERE in_guild = 1 ` +
+            `) WHERE id = ?`
+        );
+        try { member = await StoryGuild.members.fetch(id.toString()); }
+        catch { return null; }
+        avatar = member.user.avatarURL(true);
+        if (avatar === null) avatar = member.user.defaultAvatarURL;
+        row = stmt.get(id);
+        res = { 'rank': row._rank.toString(), 'name': member.displayName, 'AvatarUrl': avatar };
+        res[pivot] = row[pivot].toString();
+        return res;
+    } catch (e) { console.error(e); }
 }
 
 async function messageXPnMoney(message) {
@@ -103,6 +104,8 @@ async function messageXPnMoney(message) {
         stmt = db.prepare('UPDATE users SET xp = xp + 20, money = money + 50, LastChat = ? WHERE id = ?');
         stmt.run(new Date().getTime(), id);
     }
+    stmt = db.prepare('UPDATE users SET in_guild = 1 WHERE id = ?');
+    stmt.run(id);
 }
 
 async function UpdateRole(client) {

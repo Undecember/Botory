@@ -11,10 +11,10 @@ function _setup(client) {
     client.guilds.fetch(StoryGuildId.toString()).then(async guild => {
         StoryGuild = guild;
         stmt = db.prepare("SELECT ChannelId, MessageId FROM ReactionRoles");
-        for (row of stmt.all()) 
-            StoryGuild.channels.fetch(row.ChannelId.toString()).then(async channel => {
-                await channel.messages.fetch(row.MessageId.toString());
-            }).catch(console.error);
+        for (row of stmt.all()) {
+            channel = await StoryGuild.channels.fetch(row.ChannelId.toString())
+            await channel.messages.fetch(row.MessageId.toString());
+        }
     });
     client.on('messageReactionAdd', async (messageReaction, user) => {
         try { return await onReaction(messageReaction, user, 'ADD'); } catch {}
