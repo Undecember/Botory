@@ -1,0 +1,9 @@
+[Unit]
+Description=Localtunnel Service
+
+[Service]
+ExecStart=/bin/bash -c 'PATH="$PATH:BIN_PATH";./ltrun.sh'
+WorkingDirectory=BOTORY_PATH
+
+[Install]
+WantedBy=multi-user.target

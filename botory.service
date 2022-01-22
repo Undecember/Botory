@@ -1,9 +1,9 @@
 [Unit]
-Description=Discord Bot Botory Service
+Description=Botory Service
 
 [Service]
-ExecStart=/bin/bash -c '. .venv/bin/activate; python run.py > log.log 2> elog.log'
-WorkingDirectory=/home/undec/Documents/Botory
+ExecStart=/bin/bash -c 'PATH="$PATH:BIN_PATH";./run.sh'
+WorkingDirectory=BOTORY_PATH
 
 [Install]
 WantedBy=multi-user.target

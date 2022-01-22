@@ -1,0 +1,396 @@
+{
+    "commands": [
+        {
+            "name": "warns",
+            "type": 1,
+            "description": "경고기록을 확인합니다.",
+            "options": [
+                {
+                    "name": "user",
+                    "type": "USER",
+                    "description": "확인할 사용자",
+                    "required": true
+                }
+            ],
+            "defaultPermission": false,
+            "permissions": [
+                {
+                    "id": "751073808223305750",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "603897276410101789",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "923199861879365632",
+                    "type": "ROLE",
+                    "permission": true
+                }
+            ]
+        },
+        {
+            "name": "warn",
+            "type": 1,
+            "description": "사용자를 경고합니다.",
+            "options": [
+                {
+                    "name": "user",
+                    "type": "USER",
+                    "description": "경고할 사용자",
+                    "required": true
+                },
+                {
+                    "name": "reason",
+                    "type": "STRING",
+                    "description": "경고 사유",
+                    "required": true
+                }
+            ],
+            "defaultPermission": false,
+            "permissions": [
+                {
+                    "id": "751073808223305750",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "603897276410101789",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "923199861879365632",
+                    "type": "ROLE",
+                    "permission": true
+                }
+            ]
+        },
+        {
+            "name": "ban",
+            "type": 1,
+            "description": "사용자를 밴합니다.",
+            "options": [
+                {
+                    "name": "user",
+                  "type": "USER",
+                    "description": "밴할 사용자",
+                    "required": true
+                },
+                {
+                    "name": "reason",
+                    "type": "STRING",
+                    "description": "밴 사유",
+                    "required": false
+                }
+            ],
+            "defaultPermission": false,
+            "permissions": [
+                {
+                    "id": "751073808223305750",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "603897276410101789",
+                    "type": "USER",
+                    "permission": true
+                }
+            ]
+        },
+        {
+            "name": "ban",
+            "type": 2,
+            "defaultPermission": false,
+            "permissions": [
+                {
+                    "id": "751073808223305750",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "603897276410101789",
+                    "type": "USER",
+                    "permission": true
+                }
+            ]
+        },
+        {
+            "name": "co",
+            "type": 1,
+            "description": "reaction log",
+            "options": [
+                {
+                    "name": "lookup",
+                    "type": 1,
+                    "description": "반응 로그를 검색합니다",
+                    "options": [
+                        {
+                            "name": "action",
+                            "type": "STRING",
+                            "description": "찾을 종류",
+                            "required": false,
+                            "choices": [
+                                {
+                                    "name": "add",
+                                    "value": "1"
+                                },
+                                {
+                                    "name": "remove",
+                                    "value": "0"
+                                }
+                            ]
+                        },
+                        {
+                            "name": "user",
+                            "type": "USER",
+                            "description": "반응한 사람",
+                            "required": false
+                        },
+                        {
+                            "name": "message",
+                            "type": "INTEGER",
+                            "description": "반응이 달린 메시지의 id",
+                            "required": false
+                        },
+                        {
+                            "name": "emoji",
+                            "type": "STRING",
+                            "description": "이모지의 이름",
+                            "required": false
+                        },
+                        {
+                            "name": "emoji-id",
+                            "type": "INTEGER",
+                            "description": "이모지의 id",
+                            "required": false
+                        }
+                    ]
+                }
+            ],
+            "defaultPermission": false,
+            "permissions": [
+                {
+                    "id": "751073808223305750",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "603897276410101789",
+                    "type": "USER",
+                    "permission": true
+                }
+            ]
+        },
+        {
+            "name": "toto",
+            "type": 1,
+            "description": "토토",
+            "options": [
+                {
+                    "name": "new",
+                    "type": 1,
+                    "description": "새 토토를 시작합니다.",
+                    "options": [
+                        {
+                            "name": "title",
+                            "type": "STRING",
+                            "description": "제목",
+                            "required": true
+                        },
+                        {
+                            "name": "desc",
+                            "type": "STRING",
+                            "description": "설명",
+                            "required": true
+                        },
+                        {
+                            "name": "aname",
+                            "type": "STRING",
+                            "description": "A 이름",
+                            "required": true
+                        },
+                        {
+                            "name": "bname",
+                            "type": "STRING",
+                            "description": "B 이름",
+                            "required": true
+                        },
+                        {
+                            "name": "close",
+                            "type": "INTEGER",
+                            "description": "마감 제한시간 (초단위, 기본 5분)",
+                            "required": false
+                        }
+                    ]
+                },
+                {
+                    "name": "end",
+                    "type": 1,
+                    "description": "토토를 종료합니다.",
+                    "options": [
+                        {
+                            "name": "side",
+                            "type": "STRING",
+                            "description": "승리한 쪽 선택",
+                            "required": true,
+                            "choices": [
+                                {
+                                    "name": "A",
+                                    "value": "A"
+                                },
+                                {
+                                    "name": "B",
+                                    "value": "B"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "cancel",
+                    "type": 1,
+                    "description": "토토를 취소합니다."
+                },
+                {
+                    "name": "stopbet",
+                    "type": 1,
+                    "description": "베팅을 마감합니다."
+                }
+            ],
+            "defaultPermission": false,
+            "permissions": [
+                {
+                    "id": "751073808223305750",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "603897276410101789",
+                    "type": "USER",
+                    "permission": true
+                }
+            ]
+        },
+        {
+            "name": "goraid",
+            "type": 1,
+            "description": "레이드를 부릅니다.",
+            "options": [
+                {
+                    "name": "price",
+                    "type": "INTEGER",
+                    "description": "레이드 도토리 개수 (기본값 2000)"
+                }
+            ],
+            "defaultPermission": false,
+            "permissions": [
+                {
+                    "id": "751073808223305750",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "603897276410101789",
+                    "type": "USER",
+                    "permission": true
+                }
+            ]
+        },
+        {
+            "name": "message",
+            "type": 1,
+            "description": "메시지",
+            "options": [
+                {
+                    "name": "json",
+                    "type": 1,
+                    "description": "메시지에서 json 데이터를 불러옵니다.",
+                    "options": [
+                        {
+                            "name": "link",
+                            "type": "STRING",
+                            "description": "참조 메시지 링크",
+                            "required": true
+                        }
+                    ]
+                },
+                {
+                    "name": "send",
+                    "type": 1,
+                    "description": "메시지를 보냅니다.",
+                    "options": [
+                        {
+                            "name": "link",
+                            "type": "STRING",
+                            "description": "참조 메시지 링크",
+                            "required": true
+                        }
+                    ]
+                },
+                {
+                    "name": "edit",
+                    "type": 1,
+                    "description": "메시지를 수정합니다.",
+                    "options": [
+                        {
+                            "name": "olink",
+                            "type": "STRING",
+                            "description": "대상 메시지 링크",
+                            "required": true
+                        },
+                        {
+                            "name": "link",
+                            "type": "STRING",
+                            "description": "참조 메시지 링크",
+                            "required": true
+                        }
+                    ]
+                }
+            ],
+            "defaultPermission": false,
+            "permissions": [
+                {
+                    "id": "751073808223305750",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "603897276410101789",
+                    "type": "USER",
+                    "permission": true
+                }
+            ]
+        },
+        {
+            "name": "money",
+            "type": 1,
+            "options": [
+                {
+                    "name": "user",
+                    "type": "USER",
+                    "description": "확인할 대상",
+                    "required": false
+                }
+            ],
+            "description": "도토리 잔액을 확인합니다.",
+            "defaultPermission": true
+        },
+        {
+            "name": "rank",
+            "type": 1,
+            "options": [
+                {
+                    "name": "user",
+                    "type": "USER",
+                    "description": "확인할 대상",
+                    "required": false
+                }
+            ],
+            "description": "경험치 랭크를 확인합니다.",
+            "defaultPermission": true
+        }
+    ]
+}

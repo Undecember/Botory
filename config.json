@@ -1,0 +1,15 @@
+{
+	"clientId": "873118847597690920",
+	"intents": "11111111111111",
+    "submodules": [
+        "Toto",
+        "Moderator",
+        "Youtube",
+        "ReactionRole",
+        "MessageManager",
+        "Raid",
+        "Rank",
+        "Logger",
+        "Status"
+    ]
+}
