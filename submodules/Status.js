@@ -81,10 +81,9 @@ async function UpdateStatus(client) {
     }
     boostlevel = 0
     if (StoryGuild.premiumTier != 'NONE') boostlevel = StoryGuild.premiumTier.split('_').pop();
-    await BoostChannel.edit({ name :
-        `${StoryGuild.premiumSubscriptionCount}부스트⚬${boostlevel}레벨⚬${boosters.length}명` });
-    await MemberChannel.edit({ name : '전체 멤버 - ' + AllCount + '명' });
-    await RoleChannel.edit({ name : '정식 멤버 - ' + MemberCount + '명' });
+    await BoostChannel.edit({ name : `부스터 - ${boosters.length}명` });
+    await MemberChannel.edit({ name : `전체 멤버 - ${AllCount} 명` });
+    await RoleChannel.edit({ name : `정식 멤버 - ${MemberCount} 명` });
     request = { data : [] };
     for (booster of boosters) {
         avatar = booster.user.avatarURL();

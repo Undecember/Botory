@@ -19,7 +19,9 @@ function _setup(client) {
     client.on('interactionCreate', async interaction => {
         if (!interaction.isCommand()) return;
         const { commandName } = interaction;
-        if (commandName === 'goraid') return await cmd_goraid(interaction);
+        try {
+            if (commandName === 'goraid') return await cmd_goraid(interaction);
+        } catch (e) { console.error(e); }
     });
 }
 

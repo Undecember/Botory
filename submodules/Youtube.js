@@ -24,12 +24,14 @@ function _setup(client) {
         notifier.setup();
         notifier.subscribe(YoutubeChannels);
         notifier.on('notified', data => {
-            if (YoutubeChannels.includes(data.channel.id)) {
-                YoutubeChannel.send(`${data.video.link}\n새로운 영상이 올라왔어요!`)
-                    .then(msg => {
-                        msg.react('👍').then(() => {msg.react('👎');});
-                    }).catch(console.error);
-            } else notifier.unsubscribe(data.channel.id);
+            try {
+                if (YoutubeChannels.includes(data.channel.id)) {
+                    YoutubeChannel.send(`${data.video.link}\n새로운 영상이 올라왔어요!`)
+                        .then(msg => {
+                            msg.react('👍').then(() => {msg.react('👎');});
+                        }).catch(console.error);
+                } else notifier.unsubscribe(data.channel.id);
+            } catch (e) { console.error(e); }
         });
     });
 }

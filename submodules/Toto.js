@@ -20,17 +20,19 @@ function _setup(client) {
     client.on('interactionCreate', async interaction => {
         if (!interaction.isCommand()) return;
         const { commandName } = interaction;
-        if (commandName != 'toto') return;
-        cmd = interaction.options.getSubcommand();
         try {
-            if (cmd == 'new') return await cmd_toto_new(interaction);
-            if (cmd == 'end') return await cmd_toto_end(interaction);
-            if (cmd == 'cancel') return await cmd_toto_cancel(interaction);
-            if (cmd == 'stopbet') return await cmd_toto_stopbet(interaction);
-        } catch (e) {
-            console.error(e);
-            return await interaction.reply({ content: 'failed!', ephemeral: true });
-        }
+            if (commandName != 'toto') return;
+            cmd = interaction.options.getSubcommand();
+            try {
+                if (cmd == 'new') return await cmd_toto_new(interaction);
+                if (cmd == 'end') return await cmd_toto_end(interaction);
+                if (cmd == 'cancel') return await cmd_toto_cancel(interaction);
+                if (cmd == 'stopbet') return await cmd_toto_stopbet(interaction);
+            } catch (e) {
+                console.error(e);
+                return await interaction.reply({ content: 'failed!', ephemeral: true });
+            }
+        } catch (e) { console.error(e); }
     });
 }
 

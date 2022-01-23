@@ -33,7 +33,6 @@ function _setup(client) {
             if (commandName === 'unwarn') return await cmd_unwarn(interaction);
         } catch (e) { console.error(e); }
     });
-    client.on('reactionAdd', async interaction => {
 }
 
 module.exports = { _setup };

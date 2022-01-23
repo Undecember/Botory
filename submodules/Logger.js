@@ -21,7 +21,9 @@ function _setup(client) {
     client.on('interactionCreate', async interaction => {
         if (!interaction.isCommand()) return;
         const { commandName } = interaction;
-        if (commandName === 'co') return await cmd_lookup(interaction);
+        try {
+            if (commandName === 'co') return await cmd_lookup(interaction);
+        } catch (e) { console.error(e); }
     });
 }
 

@@ -76,7 +76,7 @@ def GenFrame(booster, length):
     return ret.resize((length, length))
 
 if __name__ == '__main__':
-    for key in ['background', 'template', 'header']: DB[key] = Image.open(f'images/{key}.png').convert('RGBA')
+    for key in ['background', 'template', 'header']: DB[key] = Image.open(f'resources/images/{key}.png').convert('RGBA')
     with open(sys.argv[1], 'r') as fp: boosters = json.loads(fp.read())['data']
     print(GenImages(boosters), end = '')
     sys.stdout.flush()

@@ -22,8 +22,10 @@ function _setup(client) {
     client.on('interactionCreate', async interaction => {
         if (!interaction.isCommand()) return;
         const { commandName } = interaction;
-        if (commandName === 'rank') return await cmd_rank(interaction, 'XP');
-        if (commandName === 'money') return await cmd_rank(interaction, 'Money');
+        try {
+            if (commandName === 'rank') return await cmd_rank(interaction, 'XP');
+            if (commandName === 'money') return await cmd_rank(interaction, 'Money');
+        } catch (e) { console.error(e); }
     });
     client.on('messageCreate', messageXPnMoney);
 }

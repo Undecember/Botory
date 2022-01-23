@@ -11,7 +11,9 @@ function _setup(client) {
     client.on('interactionCreate', async interaction => {
         if (!interaction.isCommand()) return;
         const { commandName } = interaction;
-        if (commandName === 'message') return await cmd_message(interaction);
+        try {
+            if (commandName === 'message') return await cmd_message(interaction);
+        } catch (e) { console.error(e); }
     });
 }
 

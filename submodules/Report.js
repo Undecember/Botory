@@ -3,11 +3,13 @@ const { DataFromMessage } = require('./MessageManager.js');
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-var StoryGuild, OfficeChannel, ReportChannel;
+var StoryGuild, OfficeChannel, ReportChannel, ModsRoleId;
 function _setup(client) {
     stmt = db.prepare("SELECT id FROM channels WHERE key = ?");
     const ReportChannelId = stmt.get('report').id;
     const OfficeChannelId = stmt.get('office').id;
+    stmt = db.prepare("SELECT id FROM roles WHERE key = ?");
+    ModsRoleId = stmt.get('mods').id;
     stmt = db.prepare('SELECT id FROM guilds WHERE key = ?');
     client.guilds.fetch(stmt.get('story').id.toString()).then(async guild => {
         StoryGuild = guild;
@@ -16,7 +18,9 @@ function _setup(client) {
     });
     client.on('interactionCreate', async interaction => {
         const { commandName } = interaction;
-        if (commandName === 'report') return await cmd_report(interaction);
+        try {
+            if (commandName === 'report') return await cmd_report(interaction);
+        } catch (e) { console.error(e); }
     });
     client.on('messageCreate', GetReport);
 }
@@ -26,6 +30,7 @@ module.exports = { _setup };
 async function cmd_report(interaction) {
     if (interaction.targetType == 'USER')
         await OfficeChannel.send({
+            content: `<@&${ModsRoleId}>`,
             embeds: [{
                 title: '사용자 신고',
                 author: {
@@ -47,6 +52,7 @@ async function cmd_report(interaction) {
     if (interaction.targetType == 'MESSAGE') {
         message = await interaction.channel.messages.fetch(interaction.targetId);
         await OfficeChannel.send({
+            content: `<@&${ModsRoleId}>`,
             embeds: [{
                 title: '메시지 신고',
                 author: {
@@ -78,6 +84,7 @@ async function GetReport(message) {
     if (message.author.bot) return;
     const { files } = await DataFromMessage(message);
     await OfficeChannel.send({
+        content: `<@&${ModsRoleId}>`,
         embeds: [{
             title: '신고',
             description: message.content,
