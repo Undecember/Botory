@@ -1,0 +1,25 @@
+{
+  "name": "botory",
+  "version": "5.0.0",
+  "description": "A discord bot for the discord server \"THE STORIES\"",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Undecember/Botory.git"
+  },
+  "author": "Undec",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Undecember/Botory/issues"
+  },
+  "homepage": "https://github.com/Undecember/Botory#readme",
+  "dependencies": {
+    "better-sqlite3": "^7.4.5",
+    "discord.js": "^13.3.1",
+    "uuid": "^8.3.2",
+    "youtube-notification": "^1.1.0"
+  }
+}
