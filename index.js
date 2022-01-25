@@ -10,7 +10,7 @@ client.once('ready', () => {
 
 builddb().then(() => {
     client.login(token).then(() => {
-        for (submodule of submodules) {
+        for (const submodule of submodules) {
             const { _setup } = require('./submodules/' + submodule + '.js');
             _setup(client);
         }

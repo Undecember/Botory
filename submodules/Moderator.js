@@ -1,29 +1,31 @@
 const { ops } = require('../config.json');
 const { v4: uuid4 } = require('uuid');
-const { db } = require('../db.js');
+const { db, sleep, SafeDB } = require('../db.js');
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+module.exports = { _setup };
+
 function uuid4hex() {
-    buffer = Buffer.alloc(16);
+    let buffer = Buffer.alloc(16);
     uuid4({}, buffer);
     return buffer.toString('hex');
 }
 
 var StoryGuild, BanCount, BanTime, MuteRole;
-function _setup(client) {
-    stmt = db.prepare('SELECT value FROM global WHERE key = ?');
-    BanCount = stmt.get('BanCount').value;
-    BanTime = stmt.get('BanTime').value;
-    stmt = db.prepare('SELECT id FROM roles WHERE key = ?');
-    const MuteRoleId = stmt.get('mute').id;
-    stmt = db.prepare('SELECT id FROM guilds WHERE key = ?');
-    client.guilds.fetch(stmt.get('story').id.toString()).then(async guild => {
-        StoryGuild = guild;
-        MuteRole = await StoryGuild.roles.fetch(MuteRoleId.toString());
-    });
+async function _setup(client) {
+    let stmt = 'SELECT id FROM guilds WHERE key = ?';
+    const { id : StoryGuildId } = await SafeDB(stmt, 'get', 'story');
+    StoryGuild = await client.guilds.fetch(StoryGuildId.toString());
+
+    stmt = 'SELECT value FROM global WHERE key = ?';
+    BanCount = (await SafeDB(stmt, 'get', 'BanCount')).value;
+    BanTime = (await SafeDB(stmt, 'get', 'BanTime')).value;
+    stmt = 'SELECT id FROM roles WHERE key = ?';
+    const { id : MuteRoleId } = await SafeDB(stmt, 'get', 'mute');
+    MuteRole = await StoryGuild.roles.fetch(MuteRoleId.toString());
+
     client.on('interactionCreate', async interaction => {
-        const { commandName } = interaction;
-        try {
+        try { try {
+            const { commandName } = interaction;
             if (commandName === 'delete') return await cmd_delete(interaction);
             if (commandName === 'ban') return await cmd_ban(interaction);
             if (commandName === 'mute') return await cmd_mute(interaction);
@@ -31,78 +33,66 @@ function _setup(client) {
             if (commandName === 'warn') return await cmd_warn(interaction);
             if (commandName === 'warns') return await cmd_warns(interaction);
             if (commandName === 'unwarn') return await cmd_unwarn(interaction);
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error(e);
+            return await interaction.reply({ content: 'failed' });
+        } } catch (e) { console.error(e); }
     });
 }
 
-module.exports = { _setup };
-
 async function cmd_delete(interaction) {
-    try {
-        message = await interaction.channel.messages.fetch(interaction.targetId);
-        await message.delete();
-        return await interaction.reply(
-            { content : '삭제되었습니다.', ephemeral : true });
-    } catch (e) {
-        console.error(e);
-        return await interaction.reply({ content: 'failed' });
-    }
+    let message = await interaction.channel.messages.fetch(interaction.targetId);
+    await message.delete();
+    return await interaction.reply({ content : '삭제되었습니다.', ephemeral : true });
 }
 
 async function cmd_mute(interaction) {
-    UserId = null;
+    let UserId = null;
     if (interaction.isCommand()) UserId = interaction.options.getUser('user').id;
     if (interaction.isContextMenu()) UserId = interaction.targetId;
-    try {
-        member = await StoryGuild.members.fetch(UserId);
-        await member.roles.add(MuteRole);
+    if (ops.indexOf(UserId.toString()) >= 0)
         return await interaction.reply({
-            embeds: [{
-                author: {
-                    name: `${member.user.username}#${member.user.discriminator}`,
-                    iconURL: member.user.displayAvatarURL()
-                },
-                title: '뮤트'
-            }]
+            embeds: [{ description: '운영자를 뮤트할 수 없습니다.' }]
         });
-    } catch (e) {
-        console.error(e);
-        return await interaction.reply({ content: 'failed' });
-    }
+    let member = await StoryGuild.members.fetch(UserId);
+    await member.roles.add(MuteRole);
+    return await interaction.reply({
+        embeds: [{
+            author: {
+                name: `${member.user.username}#${member.user.discriminator}`,
+                iconURL: member.user.displayAvatarURL()
+            },
+            title: '뮤트'
+        }]
+    });
 }
 
 async function cmd_unmute(interaction) {
-    UserId = interaction.options.getUser('user').id;
-    try {
-        member = await StoryGuild.members.fetch(UserId);
-        await member.roles.remove(MuteRole);
-        return await interaction.reply({ content: '뮤트 해제되었습니다.' });
-    } catch (e) {
-        console.error(e);
-        return await interaction.reply({ content: 'failed' });
-    }
+    let UserId = interaction.options.getUser('user').id;
+    let member = await StoryGuild.members.fetch(UserId);
+    await member.roles.remove(MuteRole);
+    return await interaction.reply({ content: '뮤트 해제되었습니다.' });
 }
 
 async function cmd_ban(interaction) {
-    UserId = null;
+    let UserId = null;
     if (interaction.isCommand()) UserId = interaction.options.getUser('user').id;
     if (interaction.isContextMenu()) UserId = interaction.targetId;
-    try {
-        reason = null;
-        try { reason = interaction.options.getString('reason'); } catch {}
-        return await interaction.reply(await ban(interaction.client, UserId, reason));
-    } catch (e) {
-        console.error(e);
-        return await interaction.reply({ content: 'failed' });
-    }
+    if (ops.indexOf(UserId.toString()) >= 0)
+        return await interaction.reply({
+            embeds: [{ description: '운영자를 밴할 수 없습니다.' }]
+        });
+    let reason = null;
+    try { reason = interaction.options.getString('reason'); } catch {}
+    return await interaction.reply(await ban(interaction.client, UserId, reason));
 }
 
 async function ban(client, UserId, reason) {
-    user = await client.users.fetch(UserId);
-    fields = []
+    let user = await client.users.fetch(UserId);
+    let fields = []
     if (reason != null) fields = [{ name : '사유', value : reason }];
     try {
-        DMChannel = await user.createDM();
+        let DMChannel = await user.createDM();
         await DMChannel.send({
             embeds: [{
                 title: 'RIP :zany_face:',
@@ -122,8 +112,8 @@ async function ban(client, UserId, reason) {
 }
 
 async function cmd_unwarn(interaction) {
-    WarnId = interaction.options.getString('id');
-    stmt = db.prepare(`SELECT id, ModeratorId FROM infractions WHERE id = ?`);
+    let WarnId = interaction.options.getString('id');
+    let stmt = db.prepare(`SELECT id, ModeratorId FROM infractions WHERE id = ?`);
     if (stmt.all(WarnId).length == 0)
         return await interaction.reply({
             embeds: [{
@@ -147,22 +137,22 @@ async function cmd_unwarn(interaction) {
 }
 
 async function cmd_warn(interaction) {
-    UserId = interaction.options.getUser('user').id;
-    reason = interaction.options.getString('reason');
-    stmt = db.prepare(`INSERT INTO infractions
-        (id, UserId, ModeratorId, reason, timecode) VALUES (?, ?, ?, ?, ?)`);
-    flag = true;
-    while (flag) {
-        try {
-            stmt.run(uuid4hex().slice(0, 10), UserId, interaction.user.id,
-                reason, new Date().getTime());
-            flag = false;
-        } catch { }
-        await sleep(50);
-    }
-    user = await interaction.client.users.fetch(UserId);
-    fields = [];
-    if (reason != null) fields.push();
+    let UserId = interaction.options.getUser('user').id;
+    if (ops.indexOf(UserId.toString()) >= 0)
+        return await interaction.reply({
+            embeds: [{ description: '운영자를 경고할 수 없습니다.' }]
+        });
+    let reason = interaction.options.getString('reason');
+    let stmt = `INSERT INTO infractions (id, UserId, ModeratorId, reason, timecode)
+        VALUES (?, ?, ?, ?, ?)`;
+    await SafeDB(stmt, 'run',
+        uuid4hex().slice(0, 10),
+        UserId,
+        interaction.user.id,
+        reason,
+        new Date().getTime());
+    let user = await interaction.client.users.fetch(UserId);
+    let fields = [];
     await interaction.reply({
         embeds: [{
             author: {
@@ -176,29 +166,28 @@ async function cmd_warn(interaction) {
             }]
         }]
     });
-    deadline = new Date().getTime() - BanTime;
-    stmt = db.prepare(`SELECT id FROM infractions
-        WHERE UserId = ? AND timecode > ? LIMIT 5`);
-    if (stmt.all(UserId, deadline).length >= BanCount) {
-        await interaction.channel.send(await ban(interaction.client, UserId, '경고 누적'));
-    }
+    let deadline = new Date().getTime() - BanTime;
+    stmt = `SELECT id FROM infractions WHERE UserId = ? AND timecode > ? LIMIT 5`;
+    if ((await SafeDB(stmt, 'all', UserId, deadline)).length >= BanCount)
+        await interaction.channel.send(
+            await ban(interaction.client, UserId, '경고 누적'));
 }
 
 async function cmd_warns(interaction) {
-    UserId = interaction.options.getUser('user').id;
-    stmt = db.prepare(`SELECT id, reason, timecode FROM infractions
-        WHERE UserId = ? ORDER BY timecode DESC LIMIT 5`);
-    fields = [];
-    for (infraction of stmt.all(UserId)) {
-        timecode = infraction.timecode / 1000n;
+    let UserId = interaction.options.getUser('user').id;
+    let stmt = `SELECT id, reason, timecode FROM infractions
+        WHERE UserId = ? ORDER BY timecode DESC LIMIT 5`;
+    let fields = [];
+    for (const infraction of await SafeDB(stmt, 'all', UserId)) {
+        let timecode = infraction.timecode / 1000n;
         fields.push({
             name: `ID \`${infraction.id}\``,
             value: `사유 \`${infraction.reason}\`
                 시각 <t:${timecode}:R>`
         });
     }
-    user = await interaction.client.users.fetch(UserId);
-    desc = '';
+    let user = await interaction.client.users.fetch(UserId);
+    let desc = '';
     if (fields.length == 0) desc = '경고가 없습니다.';
     await interaction.reply({
         embeds: [{

@@ -1,45 +1,51 @@
 const { spawn } = require('child_process');
 const fs = require('fs');
 const { v4: uuid4 } = require('uuid');
-const { db } = require('../db.js');
+const { db, sleep, SafeDB } = require('../db.js');
+const { UpdateInGuild } = require('./Status.js');
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+module.exports = { _setup, RequestTop, UpdateRole };
 
-var StoryGuild, RankChannel, DichRole, RichRole;
-function _setup(client) {
-    stmt = db.prepare('SELECT id FROM channels WHERE key = ?');
-    const RankChannelId = stmt.get('rank').id;
-    stmt = db.prepare('SELECT id FROM roles WHERE key = ?');
-    const DichRoleId = stmt.get('dich').id;
-    const RichRoleId = stmt.get('rich').id;
-    stmt = db.prepare('SELECT id FROM guilds WHERE key = ?');
-    client.guilds.fetch(stmt.get('story').id.toString()).then(async (guild) => {
-        StoryGuild = guild;
-        RankChannel = await StoryGuild.channels.fetch(RankChannelId.toString());
-        RichRole = await StoryGuild.roles.fetch(RichRoleId.toString());
-        DichRole = await StoryGuild.roles.fetch(DichRoleId.toString());
-    });
+var StoryGuild, RankChannel, DichRole, RichRole, DichPivot, RichPivot;
+async function _setup(client) {
+    let stmt = 'SELECT id FROM guilds WHERE key = ?';
+    const { id : StoryGuildId } = await SafeDB(stmt, 'get', 'story');
+    StoryGuild = await client.guilds.fetch(StoryGuildId.toString());
+
+    stmt = 'SELECT id FROM channels WHERE key = ?';
+    const { id : RankChannelId } = await SafeDB(stmt, 'get', 'rank');
+    stmt = 'SELECT id FROM roles WHERE key = ?';
+    const { id : DichRoleId } = await SafeDB(stmt, 'get', 'dich');
+    const { id : RichRoleId } = await SafeDB(stmt, 'get', 'rich');
+    stmt = 'SELECT value FROM global WHERE key = ?';
+    RichPivot = (await SafeDB(stmt, 'get', 'RichPivot')).value;
+    DichPivot = (await SafeDB(stmt, 'get', 'DichPivot')).value;
+    RankChannel = await StoryGuild.channels.fetch(RankChannelId.toString());
+    RichRole = await StoryGuild.roles.fetch(RichRoleId.toString());
+    DichRole = await StoryGuild.roles.fetch(DichRoleId.toString());
+
     client.on('interactionCreate', async interaction => {
-        if (!interaction.isCommand()) return;
-        const { commandName } = interaction;
-        try {
+        try { try {
+            if (!interaction.isCommand()) return;
+            const { commandName } = interaction;
             if (commandName === 'rank') return await cmd_rank(interaction, 'XP');
             if (commandName === 'money') return await cmd_rank(interaction, 'Money');
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error(e);
+            return await interaction.reply({ content: 'failed' });
+        } } catch (e) { console.error(e); }
     });
     client.on('messageCreate', messageXPnMoney);
 }
 
-module.exports = { _setup, RequestTop, UpdateRole };
-
 async function cmd_rank(interaction, pivot) {
-    id = interaction.options.getMember('user')?.id;
+    let id = interaction.options.getMember('user')?.id;
     if (id == null) id = interaction.user.id;
-    request = await RequestFrame(interaction.client, StoryGuild, id, pivot);
-    if (request == null) return await interaction.reply({ content: 'try later', ephemeral: true });
-    ReqFileName = uuid4() + '.json'
+    let request = await RequestFrame(interaction.client, id, pivot);
+    let ReqFileName = uuid4() + '.json'
     fs.writeFileSync(ReqFileName, JSON.stringify(request, null, 2));
-    const pythonProcess = spawn('.venv/bin/python', [`./pkgs/${pivot}.py`, ReqFileName]);
+    const pythonProcess = spawn(
+        '.venv/bin/python', [`./pkgs/${pivot}.py`, ReqFileName]);
     pythonProcess.stdout.on('data', async (data) => {
         data = data.toString();
         await interaction.reply({ files: [data], ephemeral: true });
@@ -48,92 +54,85 @@ async function cmd_rank(interaction, pivot) {
 }
 
 async function RequestTop(client, pivot) {
-    data = [];
-    const stmt = db.prepare(
-        `SELECT id, ${pivot}, ` + 
-            `RANK() OVER (ORDER BY ${pivot} DESC) _rank ` + 
-        'FROM users WHERE in_guild = 1'
-    );
-    i = 0;
-    for (const row of stmt.iterate()) {
-        if (i > 19) break;
-        dat = await RequestFrame(client, StoryGuild, row.id, pivot);
-        if (dat != null) {
-            data.push(dat);
-            i++;
-        }
+    let data = [];
+    const stmt = `SELECT id, ${pivot},
+        RANK() OVER (ORDER BY ${pivot} DESC) _rank
+        FROM users WHERE in_guild = 1 LIMIT 20`;
+    for (const row of await SafeDB(stmt, 'all')) {
+        const frame = await RequestFrame(client, row.id, pivot);
+        if (frame != null) data.push(frame);
     }
     return data;
 }
 
-async function RequestFrame(client, StoryGuild, id, pivot) {
+async function RequestFrame(client, id, pivot) {
     try {
-        const stmt = db.prepare(
-            `SELECT ${pivot}, _rank FROM ( ` +
-                `SELECT id, ${pivot}, ` +
-                    `RANK() OVER (ORDER BY ${pivot} DESC) _rank ` +
-                `FROM users WHERE in_guild = 1 ` +
-            `) WHERE id = ?`
-        );
-        try { member = await StoryGuild.members.fetch(id.toString()); }
-        catch { return null; }
-        avatar = member.user.avatarURL(true);
-        if (avatar === null) avatar = member.user.defaultAvatarURL;
-        row = stmt.get(id);
-        res = { 'rank': row._rank.toString(), 'name': member.displayName, 'AvatarUrl': avatar };
+        let member = null;
+        try {
+            member = await StoryGuild.members.fetch(id.toString());
+        } catch { return null; }
+        await UpdateInGuild(client, id);
+        stmt = `SELECT ${pivot}, _rank FROM (
+            SELECT id, ${pivot},
+                RANK() OVER (ORDER BY ${pivot} DESC) _rank
+            FROM users WHERE in_guild = 1
+        ) WHERE id = ?`;
+        let row = await SafeDB(stmt, 'get', id);
+        let res = {
+            'rank': row._rank.toString(),
+            'name': member.displayName,
+            'AvatarUrl': await member.user.displayAvatarURL() };
         res[pivot] = row[pivot].toString();
         return res;
     } catch (e) { console.error(e); }
 }
 
 async function messageXPnMoney(message) {
-    if (message.guild === undefined) return;
-    if (message.author === undefined) return;
-    if (message.guild?.id != StoryGuild.id) return;
-    if (message.author.bot) return;
-    id = message.author.id;
-    stmt = db.prepare('SELECT LastChat FROM users WHERE id = ?');
-    const dat = stmt.get(id);
-    if (dat === undefined) {
-        stmt = db.prepare('INSERT INTO users (id, xp, money, LastChat) VALUES (?, 20, 50, ?)');
-        stmt.run(id, new Date().getTime());
-        return;
-    }
-    flag = false;
-    if (dat.LastChat == null) flag = true;
-    if (!flag) flag = dat.LastChat + 1n * 60n * 1000n < new Date().getTime();
-    if (flag) {
-        stmt = db.prepare('UPDATE users SET xp = xp + 20, money = money + 50, LastChat = ? WHERE id = ?');
-        stmt.run(new Date().getTime(), id);
-    }
-    stmt = db.prepare('UPDATE users SET in_guild = 1 WHERE id = ?');
-    stmt.run(id);
+    try {
+        if (message.guild === undefined) return;
+        if (message.author === undefined) return;
+        if (message.guild?.id != StoryGuild.id) return;
+        if (message.author.bot) return;
+        let id = message.author.id;
+        await UpdateInGuild(message.client, id);
+        let stmt = 'SELECT LastChat FROM users WHERE id = ?';
+        const dat = SafeDB(stmt, 'get', id);
+        if (dat === undefined) {
+            stmt = `INSERT INTO users (id, xp, money, LastChat)
+                VALUES (?, 20, 50, ?)`;
+            return await SafeDB(stmt, 'run', id, new Date().getTime());
+        }
+        let flag = false;
+        if (dat.LastChat == null) flag = true;
+        if (!flag) flag = dat.LastChat + 1n * 60n * 1000n < new Date().getTime();
+        if (flag) {
+            stmt = `UPDATE users SET
+                xp = xp + 20, money = money + 50, LastChat = ? WHERE id = ?`;
+            await SafeDB(stmt, 'run', new Date().getTime(), id);
+        }
+    } catch (e) { console.error(e); }
 }
 
 async function UpdateRole(client) {
-    stmt = db.prepare('SELECT value FROM global WHERE key = ?');
-    const RichPivot = stmt.get('RichPivot').value;
-    const DichPivot = stmt.get('DichPivot').value;
-    dichs = [], richs = [];
-    stmt = db.prepare(
-        `SELECT id, xp FROM users WHERE in_guild = 1 ORDER BY xp DESC LIMIT ${DichPivot}`
-    );
-    for (row of stmt.all()) dichs.push(row.id);
-    stmt = db.prepare(
-        `SELECT id, money FROM users WHERE in_guild = 1 ORDER BY money DESC LIMIT ${RichPivot}`
-    );
-    for (row of stmt.all()) richs.push(row.id);
-    for (id of dichs) {
-        try {
-            member = await StoryGuild.members.fetch(id.toString());
-            await member.roles.add(DichRole);
-        } catch (e) { }
-    }
-    for (id of richs) {
-        try {
-            member = await StoryGuild.members.fetch(id.toString());
-            await member.roles.add(RichRole);
-        } catch (e) { console.error(e); }
-    }
-    return data;
+    try {
+        let dichs = [], richs = [];
+        stmt = `SELECT id, xp FROM users WHERE in_guild = 1
+            ORDER BY xp DESC LIMIT ${DichPivot}`
+        for (const row of await SafeDB(stmt, 'all')) dichs.push(row.id);
+        stmt = `SELECT id, xp FROM users WHERE in_guild = 1
+            ORDER BY money DESC LIMIT ${RichPivot}`
+        for (const row of await SafeDB(stmt, 'all')) richs.push(row.id);
+        for (const id of dichs) {
+            try {
+                let member = await StoryGuild.members.fetch(id.toString());
+                await member.roles.add(DichRole);
+            } catch (e) { }//console.error(e); }
+        }
+        for (const id of richs) {
+            try {
+                let member = await StoryGuild.members.fetch(id.toString());
+                await member.roles.add(RichRole);
+            } catch (e) { }//console.error(e); }
+        }
+    } catch (e) { console.error(e); }
 }
