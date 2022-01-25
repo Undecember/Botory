@@ -1,26 +1,28 @@
-const { db } = require('../db.js');
+const { db, sleep, SafeDB } = require('../db.js');
 const { DataFromMessage } = require('./MessageManager.js');
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
 var StoryGuild, OfficeChannel, ReportChannel, ModsRoleId;
-function _setup(client) {
-    stmt = db.prepare("SELECT id FROM channels WHERE key = ?");
-    const ReportChannelId = stmt.get('report').id;
-    const OfficeChannelId = stmt.get('office').id;
-    stmt = db.prepare("SELECT id FROM roles WHERE key = ?");
-    ModsRoleId = stmt.get('mods').id;
-    stmt = db.prepare('SELECT id FROM guilds WHERE key = ?');
-    client.guilds.fetch(stmt.get('story').id.toString()).then(async guild => {
-        StoryGuild = guild;
-        ReportChannel = await StoryGuild.channels.fetch(ReportChannelId.toString());
-        OfficeChannel = await StoryGuild.channels.fetch(OfficeChannelId.toString());
-    });
+async function _setup(client) {
+    let stmt = 'SELECT id FROM guilds WHERE key = ?';
+    const { id : StoryGuildId } = await SafeDB(stmt, 'get', 'story');
+    StoryGuild = await client.guilds.fetch(StoryGuildId.toString());
+
+    stmt = 'SELECT id FROM channels WHERE key = ?';
+    const { id : ReportChannelId } = await SafeDB(stmt, 'get', 'report');
+    const { id : OfficeChannelId } = await SafeDB(stmt, 'get', 'office');
+    stmt = 'SELECT id FROM roles WHERE key = ?';
+    ModsRoleId = (await SafeDB(stmt, 'get', 'mods')).id;
+    ReportChannel = await StoryGuild.channels.fetch(ReportChannelId.toString());
+    OfficeChannel = await StoryGuild.channels.fetch(OfficeChannelId.toString());
+
     client.on('interactionCreate', async interaction => {
-        const { commandName } = interaction;
-        try {
+        try { try {
+            const { commandName } = interaction;
             if (commandName === 'report') return await cmd_report(interaction);
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error(e);
+            return await interaction.reply({ content: 'failed' });
+        } } catch (e) { console.error(e); }
     });
     client.on('messageCreate', GetReport);
 }
@@ -50,7 +52,7 @@ async function cmd_report(interaction) {
             }]
         });
     if (interaction.targetType == 'MESSAGE') {
-        message = await interaction.channel.messages.fetch(interaction.targetId);
+        let message = await interaction.channel.messages.fetch(interaction.targetId);
         await OfficeChannel.send({
             content: `<@&${ModsRoleId}>`,
             embeds: [{
@@ -80,27 +82,29 @@ async function cmd_report(interaction) {
 }
 
 async function GetReport(message) {
-    if (message.channelId != ReportChannel.id) return;
-    if (message.author.bot) return;
-    const { files } = await DataFromMessage(message);
-    await OfficeChannel.send({
-        content: `<@&${ModsRoleId}>`,
-        embeds: [{
-            title: '신고',
-            description: message.content,
-            author: {
-                name: `${message.author.username}#${message.author.discriminator}`,
-                iconURL: message.author.displayAvatarURL()
-            },
-            fields: [{
-                name: '신고자 id',
-                value: `\`${message.author.id}\``
-            }]
-        }],
-        files: files
-    });
-    await message.delete();
-    message = await ReportChannel.send(`<@${message.author.id}> 신고되었습니다.`);
-    await sleep(2000);
-    await message.delete();
+    try {
+        if (message.channelId != ReportChannel.id) return;
+        if (message.author.bot) return;
+        const { files } = await DataFromMessage(message);
+        await OfficeChannel.send({
+            content: `<@&${ModsRoleId}>`,
+            embeds: [{
+                title: '신고',
+                description: message.content,
+                author: {
+                    name: `${message.author.username}#${message.author.discriminator}`,
+                    iconURL: message.author.displayAvatarURL()
+                },
+                fields: [{
+                    name: '신고자 id',
+                    value: `\`${message.author.id}\``
+                }]
+            }],
+            files: files
+        });
+        await message.delete();
+        message = await ReportChannel.send(`<@${message.author.id}> 신고되었습니다.`);
+        await sleep(2000);
+        await message.delete();
+    } catch (e) { console.error(e); }
 }
