@@ -129,6 +129,5 @@ async function UpdateRole(client) {
                 await member.roles.add(RichRole);
             } catch (e) { console.error(e); }
         }
-        return data;
     } catch (e) { console.error(e); }
 }
