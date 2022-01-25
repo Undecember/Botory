@@ -78,9 +78,9 @@ async function UpdateStatus(client) {
     await RoleChannel.edit({ name : `정식 멤버 - ${MemberCount} 명` });
     let request = { data : [] };
     for (const booster of boosters) {
-        const avatar = booster.user.avatarURL();
-        if (avatar === null) avatar = member.user.defaultAvatarURL;
-        const dat = { name : booster.displayName, avatarURL : avatar };
+        const dat = {
+            name: booster.displayName,
+            avatarURL : await booster.user.displayAvatarURL() };
         request.data.push(dat);
     }
     const ReqFileName = uuid4() + '.json'

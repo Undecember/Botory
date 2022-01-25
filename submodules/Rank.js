@@ -58,14 +58,19 @@ async function RequestTop(client, pivot) {
     const stmt = `SELECT id, ${pivot},
         RANK() OVER (ORDER BY ${pivot} DESC) _rank
         FROM users WHERE in_guild = 1 LIMIT 20`;
-    for (const row of await SafeDB(stmt, 'all'))
-        data.push(RequestFrame(client, row.id, pivot));
+    for (const row of await SafeDB(stmt, 'all')) {
+        const frame = await RequestFrame(client, row.id, pivot);
+        if (frame != null) data.push(frame);
+    }
     return data;
 }
 
 async function RequestFrame(client, id, pivot) {
     try {
-        let member = await StoryGuild.members.fetch(id.toString());
+        let member = null;
+        try {
+            member = await StoryGuild.members.fetch(id.toString());
+        } catch { return null; }
         await UpdateInGuild(client, id);
         stmt = `SELECT ${pivot}, _rank FROM (
             SELECT id, ${pivot},
@@ -121,14 +126,13 @@ async function UpdateRole(client) {
             try {
                 let member = await StoryGuild.members.fetch(id.toString());
                 await member.roles.add(DichRole);
-            } catch (e) { console.error(e); }
+            } catch (e) { }//console.error(e); }
         }
         for (const id of richs) {
             try {
                 let member = await StoryGuild.members.fetch(id.toString());
                 await member.roles.add(RichRole);
-            } catch (e) { console.error(e); }
+            } catch (e) { }//console.error(e); }
         }
-        return data;
     } catch (e) { console.error(e); }
 }
