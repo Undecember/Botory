@@ -44,11 +44,15 @@ async function AutoCount(client) {
 
 async function UpdateInGuild(client, id) {
     try {
-        let stmt = 'UPDATE users SET in_guild = ? WHERE id = ?';
         try {
             await StoryGuild.members.fetch(id.toString());
-            await SafeDB(stmt, 'run', 1, id);
-        } catch { await SafeDB(stmt, 'run', 0, id); }
+            let stmt = 'SELECT id FROM users WHERE id = ?';
+            if (await SafeDB(stmt, 'get', id) === undefined)
+                await SafeDB('INSERT INTO users (id) VALUES (?)', 'run', id);
+            await SafeDB('UPDATE users SET in_guild = ? WHERE id = ?', 'run', 1, id);
+        } catch {
+            await SafeDB('UPDATE users SET in_guild = ? WHERE id = ?', 'run', 0, id);
+        }
     } catch (e) { console.error(e); }
 }
 

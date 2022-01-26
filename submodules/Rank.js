@@ -96,7 +96,7 @@ async function messageXPnMoney(message) {
         let id = message.author.id;
         await UpdateInGuild(message.client, id);
         let stmt = 'SELECT LastChat FROM users WHERE id = ?';
-        const dat = SafeDB(stmt, 'get', id);
+        const dat = await SafeDB(stmt, 'get', id);
         if (dat === undefined) {
             stmt = `INSERT INTO users (id, xp, money, LastChat)
                 VALUES (?, 20, 50, ?)`;

@@ -31,20 +31,26 @@ module.exports = { _setup };
 var killflag = false, ForcePrice;
 async function cmd_goraid(interaction) {
     ForcePrice = interaction.options.getInteger('price');
-    if (ForcePrice === null) ForcePrice = 2000;
     await interaction.reply({ content: `Go Raid ${ForcePrice}!`, ephemeral: true });
     killflag = true;
 }
 
 async function AutoRaidMsg(client) {
     while (true) {
-        let timeflag = Date.now();
+        let timeflag = new Date().getTime();
         try {
-            let price = 2000;
             if (Math.random() * 10 < 1 || killflag) {
+                let price = null;
                 if (killflag) {
                     price = ForcePrice;
                     killflag = false;
+                }
+                if (price == null) {
+                    const stmt = 'SELECT value FROM global WHERE key = ?';
+                    const { value : LastRaid } = await SafeDB(
+                        stmt, 'get', 'LastRaid');
+                    price = Math.floor(Number(BigInt(timeflag) - LastRaid) / 900);
+                    if (LastRaid < 0 || price < 2000) price = 2000;
                 }
                 let embed = new MessageEmbed()
                     .setTitle('도토리 레이드 도착!')
@@ -79,6 +85,8 @@ async function AutoRaidMsg(client) {
                 client.removeListener('interactionCreate', listener);
                 embed = await GenRaidEmbed(raiders, price);
                 await RaidMsg.edit({ embeds: [embed], components: [] });
+                await SafeDB('UPDATE global SET value = ? WHERE key = ?',
+                    'run', timeflag, 'LastRaid');
             }
         } catch (e) { console.error(e); }
         while (Date.now() - timeflag < 3 * 60 * 1000 && !killflag) await sleep(100);
