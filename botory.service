@@ -5,5 +5,8 @@ Description=Botory Service
 ExecStart=/bin/bash -c 'PATH="$PATH:BIN_PATH";./run.sh'
 WorkingDirectory=BOTORY_PATH
 
+Restart=on-failure
+RestartSec=3s
+
 [Install]
 WantedBy=multi-user.target
