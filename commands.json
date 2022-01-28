@@ -1,6 +1,118 @@
 {
     "commands": [
         {
+            "name": "sql",
+            "type": 1,
+            "description": "sql",
+            "options": [
+                {
+                    "name": "run",
+                    "type": 1,
+                    "description": "sql run",
+                    "options": [
+                        {
+                            "name": "query",
+                            "type": "STRING",
+                            "description": "SQL query",
+                            "required": true
+                        }
+                    ]
+                },
+                {
+                    "name": "get",
+                    "type": 1,
+                    "description": "sql get",
+                    "options": [
+                        {
+                            "name": "query",
+                            "type": "STRING",
+                            "description": "SQL query",
+                            "required": true
+                        }
+                    ]
+                },
+                {
+                    "name": "all",
+                    "type": 1,
+                    "description": "sql get all",
+                    "options": [
+                        {
+                            "name": "query",
+                            "type": "STRING",
+                            "description": "SQL query",
+                            "required": true
+                        }
+                    ]
+                }
+            ],
+            "defaultPermission": false,
+            "permissions": [
+                {
+                    "id": "603897276410101789",
+                    "type": "USER",
+                    "permission": true
+                }
+            ]
+        },
+        {
+            "name": "give",
+            "type": 1,
+            "description": "give",
+            "options": [
+                {
+                    "name": "xp",
+                    "type": 1,
+                    "description": "xp를 주거나 빼앗습니다.",
+                    "options": [
+                        {
+                            "name": "user",
+                            "type": "USER",
+                            "description": "대상",
+                            "required": true
+                        },
+                        {
+                            "name": "value",
+                            "type": "INTEGER",
+                            "description": "액수",
+                            "required": true
+                        }
+                    ]
+                },
+                {
+                    "name": "money",
+                    "type": 1,
+                    "description": "도토리를 주거나 빼앗습니다.",
+                    "options": [
+                        {
+                            "name": "user",
+                            "type": "USER",
+                            "description": "대상",
+                            "required": true
+                        },
+                        {
+                            "name": "value",
+                            "type": "INTEGER",
+                            "description": "액수",
+                            "required": true
+                        }
+                    ]
+                }
+            ],
+            "defaultPermission": false,
+            "permissions": [
+                {
+                    "id": "751073808223305750",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "603897276410101789",
+                    "type": "USER",
+                    "permission": true
+                }
+            ]
+        },
+        {
             "name": "delete",
             "type": 3,
             "defaultPermission": false,

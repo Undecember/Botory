@@ -41,6 +41,11 @@ async function _setup(client) {
 }
 
 async function cmd_delete(interaction) {
+    let stmt = 'SELECT * FROM NoModChannels WHERE id = ? OR id = ?';
+    const row = await SafeDB(stmt, 'get',
+        interaction.channel.id, interaction.channel.parentId);
+    if (row != undefined) return await interaction.reply(
+        { content : '삭제 권한이 없는 채널입니다.', ephemeral : true });
     let message = await interaction.channel.messages.fetch(interaction.targetId);
     await message.delete();
     return await interaction.reply({ content : '삭제되었습니다.', ephemeral : true });

@@ -23,7 +23,7 @@ async function _setup(client) {
 }
 
 async function cmd_message(interaction) {
-    let cmd = interaction.options.getSubcommand();
+    const cmd = interaction.options.getSubcommand();
     if (cmd == 'send') {
         link = interaction.options.getString('link');
         message = await MessageFromLink(interaction.client, link);

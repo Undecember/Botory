@@ -2,6 +2,7 @@
 	"clientId": "873118847597690920",
 	"intents": "11111111111111",
     "submodules": [
+        "Bank",
         "Logger",
         "MessageManager",
         "Moderator",
@@ -9,6 +10,7 @@
         "Rank",
         "ReactionRole",
         "Report",
+        "SQL",
         "Status",
         "Youtube"
     ],
