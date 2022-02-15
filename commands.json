@@ -236,11 +236,13 @@
         {
             "name": "report",
             "type": 2,
+            "description": "사용자를 신고합니다.",
             "defaultPermission": true
         },
         {
             "name": "report",
             "type": 3,
+            "description": "사용자를 신고합니다.",
             "defaultPermission": true
         },
         {
