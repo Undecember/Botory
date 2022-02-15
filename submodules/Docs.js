@@ -2,6 +2,7 @@ const fs = require('fs');
 const { v4: uuid4 } = require('uuid');
 const { db, sleep, SafeDB } = require('../db.js');
 const { DataFromMessage } = require('./MessageManager.js');
+const { ops } = require('../config.json');
 
 module.exports = { _setup };
 
@@ -27,14 +28,17 @@ async function _setup(client) {
 
 var LastCall;
 async function cmd_docs(interaction) {
-    if (Date.now() - LastCall < 10 * 1000)
+    if (Date.now() - LastCall < 10 * 1000 && ops.indexOf(interaction.user.id.toString()) < 0)
         return await interaction.reply({ content: '10초에 한 번만 쓸 수 있습니다.', ephemeral: true });
+    const LastLastCall = LastCall;
+    LastCall = Date.now();
     const name = interaction.options.getString('name');
     const stmt = 'SELECT * FROM docs WHERE name = ?';
     const doc = await SafeDB(stmt, 'get', name);
-    if (doc === undefined)
+    if (doc === undefined) {
+        LastCall = LastLastCall;
         return await interaction.reply({ content: '해당 문서를 찾을 수 없습니다.', ephemeral: true });
-    LastCall = Date.now();
+    }
     const channel = await StudioGuild.channels.fetch(doc.ChannelId.toString());
     const message = await channel.messages.fetch(doc.MessageId.toString());
     const MessageData = await DataFromMessage(message);
