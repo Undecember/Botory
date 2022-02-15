@@ -25,29 +25,29 @@ async function _setup(client) {
 async function cmd_message(interaction) {
     const cmd = interaction.options.getSubcommand();
     if (cmd == 'send') {
-        link = interaction.options.getString('link');
-        message = await MessageFromLink(interaction.client, link);
-        MessageData = await DataFromMessage(message);
+        const link = interaction.options.getString('link');
+        const message = await MessageFromLink(interaction.client, link);
+        const MessageData = await DataFromMessage(message);
         await interaction.channel.send(MessageData);
         return await interaction.reply({ content: 'Message sent!', ephemeral: true });
     }
     if (cmd == 'json') {
-        link = interaction.options.getString('link');
-        message = await MessageFromLink(interaction.client, link);
-        data = { content : message.content, embeds : message.embeds };
-        JsonFileName = `${uuid4()}.json`;
+        const link = interaction.options.getString('link');
+        const message = await MessageFromLink(interaction.client, link);
+        const data = { content : message.content, embeds : message.embeds };
+        const JsonFileName = `${uuid4()}.json`;
         fs.writeFileSync(JsonFileName, JSON.stringify(data, null, 2));
-        res = await interaction.reply({
+        const res = await interaction.reply({
             files: [{ attachment: JsonFileName }]
         });
-        fs.unlinkSync(data);
+        fs.unlinkSync(JsonFileName);
         return res;
     }
     if (cmd == 'edit') {
-        olink = interaction.options.getString('olink');
-        link = interaction.options.getString('link');
-        message = await MessageFromLink(interaction.client, link);
-        MessageData = await DataFromMessage(message);
+        const olink = interaction.options.getString('olink');
+        const link = interaction.options.getString('link');
+        let message = await MessageFromLink(interaction.client, link);
+        const MessageData = await DataFromMessage(message);
         message = await MessageFromLink(interaction.client, olink);
         await message.edit(MessageData);
         return await interaction.reply({ content: 'Message edited!', ephemeral: true });

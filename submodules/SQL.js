@@ -23,5 +23,7 @@ async function cmd_sql(interaction) {
     const query = interaction.options.getString('query');
     const result = await SafeDB(query, cmd);
     if (cmd == 'run') return interaction.reply('done');
-    return interaction.reply({ content : JSON.stringify(result) });
+    const res = JSON.stringify(result);
+    if (res != '') return interaction.reply({ content : res });
+    return interaction.reply({ content : 'The result is empty.' });
 }
