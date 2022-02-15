@@ -115,24 +115,32 @@ async function messageXPnMoney(message) {
 
 async function UpdateRole(client) {
     try {
-        let dichs = [], richs = [];
-        stmt = `SELECT id, xp FROM users WHERE in_guild = 1
-            ORDER BY xp DESC LIMIT ${DichPivot}`
-        for (const row of await SafeDB(stmt, 'all')) dichs.push(row.id);
-        stmt = `SELECT id, xp FROM users WHERE in_guild = 1
-            ORDER BY money DESC LIMIT ${RichPivot}`
-        for (const row of await SafeDB(stmt, 'all')) richs.push(row.id);
-        for (const id of dichs) {
-            try {
-                let member = await StoryGuild.members.fetch(id.toString());
-                await member.roles.add(DichRole);
-            } catch (e) { }//console.error(e); }
-        }
-        for (const id of richs) {
-            try {
-                let member = await StoryGuild.members.fetch(id.toString());
-                await member.roles.add(RichRole);
-            } catch (e) { }//console.error(e); }
+        for (const type of ['xp', 'money']) {
+            let pivot = RichPivot;
+            let role = RichRole;
+            if (type == 'xp') {
+                pivot = DichPivot;
+                role = DichRole;
+            }
+            let diffs = {};
+            const members = [];
+            for (const item of await StoryGuild.members.fetch())
+                members.push(item[1]);
+            for (const member of members) {
+                if (member.roles.cache.has(role.id)) diffs[member.id] = -1;
+            }
+            const stmt = `SELECT id, ${type} FROM users WHERE in_guild = 1
+                ORDER BY ${type} DESC LIMIT ${pivot}`
+            for (const row of await SafeDB(stmt, 'all')) {
+                const id = row.id.toString();
+                if (id in diffs) diffs[id] = 0;
+                else diffs[id] = 1;
+            }
+            for (const id in diffs) if (diffs[id] != 0) {
+                member = await StoryGuild.members.fetch(id);
+                if (diffs[id] < 0) await member.roles.remove(role);
+                else await member.roles.add(role);
+            }
         }
     } catch (e) { console.error(e); }
 }

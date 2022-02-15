@@ -70,9 +70,12 @@ async function AutoRaidMsg(client) {
                         if (interaction.component.customId != CID) return;
                         if (!await CheckActive(interaction.user, beforeMsgs)) return await interaction.reply({
                             content: '최근 활동이 없어 참가 거부되었습니다.', ephemeral: true });
-                        raiders.add(interaction.user.id);
-                        await interaction.reply({
-                            content: '레이드 참가되었습니다.', ephemeral: true });
+                        if (raiders.has(interaction.user.id))
+                            await interaction.reply({ content: '이미 참가하셨습니다.', ephemeral: true });
+                        else {
+                            raiders.add(interaction.user.id);
+                            await interaction.reply({ content: '레이드 참가되었습니다.', ephemeral: true });
+                        }
                     } catch (e) {
                         console.error(e);
                         return await interaction.reply({ content: 'failed' });
@@ -128,7 +131,7 @@ async function GenRaidEmbed(_raiders, price) {
         let desc = '';
         for (const raider of normals) {
             rewards[raider.id] = price;
-            desc += `${raider.displayName}, `;
+            desc += `${raider.displayName}\t `;
         }
         embed.addField(
             name = `${price}개 획득 성공!`,
@@ -138,7 +141,7 @@ async function GenRaidEmbed(_raiders, price) {
         let desc = ''
         for (const raider of boosts) {
             rewards[raider.id] = Math.round(1.5 * price);
-            desc += `${raider.displayName}, `;
+            desc += `${raider.displayName}\t `;
         }
         embed.addField(
             name = `부스터 1.5배 혜택으로 ${Math.round(1.5 * price)}개 획득 성공!`,
@@ -176,5 +179,6 @@ function removeMD(txt) {
         txt = txt.split(c).join('\\' + c);
     }
     txt = txt.split(',').join('.');
+    txt = txt.split('\t').join(',');
     return txt;
 }
