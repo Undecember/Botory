@@ -182,7 +182,6 @@
         {
             "name": "mute",
             "type": 2,
-            "description": "사용자를 뮤트합니다.",
             "defaultPermission": false,
             "permissions": [
                 {
@@ -236,13 +235,11 @@
         {
             "name": "report",
             "type": 2,
-            "description": "사용자를 신고합니다.",
             "defaultPermission": true
         },
         {
             "name": "report",
             "type": 3,
-            "description": "사용자를 신고합니다.",
             "defaultPermission": true
         },
         {
@@ -379,7 +376,6 @@
         {
             "name": "ban",
             "type": 2,
-            "description": "사용자를 밴합니다.",
             "defaultPermission": false,
             "permissions": [
                 {
