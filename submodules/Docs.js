@@ -28,8 +28,8 @@ async function _setup(client) {
 
 var LastCall;
 async function cmd_docs(interaction) {
-    if (Date.now() - LastCall < 10 * 1000 && ops.indexOf(interaction.user.id.toString()) < 0)
-        return await interaction.reply({ content: '10초에 한 번만 쓸 수 있습니다.', ephemeral: true });
+    if (Date.now() - LastCall < 5 * 60 * 1000 && ops.indexOf(interaction.user.id.toString()) < 0)
+        return await interaction.reply({ content: '5분에 한 번만 쓸 수 있습니다.', ephemeral: true });
     const LastLastCall = LastCall;
     LastCall = Date.now();
     const name = interaction.options.getString('name');
