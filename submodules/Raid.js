@@ -175,7 +175,7 @@ function shuffle(array) {
 }
 
 function removeMD(txt) {
-    for (c of '\\<:`(_*~|@') {
+    for (const c of '\\<:`(_*~|@') {
         txt = txt.split(c).join('\\' + c);
     }
     txt = txt.split(',').join('.');
