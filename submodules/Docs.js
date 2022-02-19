@@ -6,13 +6,15 @@ const { ops } = require('../config.json');
 
 module.exports = { _setup };
 
-var StoryGuild, StudioGuild;
+var StudioGuild, ArchiveChannel;
 async function _setup(client) {
     let stmt = 'SELECT id FROM guilds WHERE key = ?';
-    const { id : StoryGuildId } = await SafeDB(stmt, 'get', 'story');
     const { id : StudioGuildId } = await SafeDB(stmt, 'get', 'studio');
-    StoryGuild = await client.guilds.fetch(StoryGuildId.toString());
     StudioGuild = await client.guilds.fetch(StudioGuildId.toString());
+
+    stmt = 'SELECT id FROM channels WHERE key = ?';
+    const { id : ArchiveChannelId } = await SafeDB(stmt, 'get', 'archive');
+    ArchiveChannel = await StudioGuild.channels.fetch(ArchiveChannelId.toString());
 
     client.on('interactionCreate', async interaction => {
         try { try {
@@ -39,8 +41,7 @@ async function cmd_docs(interaction) {
         LastCall = LastLastCall;
         return await interaction.reply({ content: '해당 문서를 찾을 수 없습니다.', ephemeral: true });
     }
-    const channel = await StudioGuild.channels.fetch(doc.ChannelId.toString());
-    const message = await channel.messages.fetch(doc.MessageId.toString());
+    const message = await ArchiveChannel.messages.fetch(doc.MessageId.toString());
     const MessageData = await DataFromMessage(message);
     return await interaction.reply(MessageData);
 }
