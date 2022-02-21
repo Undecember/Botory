@@ -31,7 +31,7 @@ async function TimerMessage(interaction) {
                 await SafeDB(Ustmt, 'run',
                     (TimeFlag - timer.LastSent) / timer.interval * timer.interval,
                     timer.MessageId);
-                const message = await ArchiveChannel.messages.fetch(timer.MessageId.toString());
+                const message = await ArchiveChannel.messages.fetch(timer.MessageId.toString(), { force : true });
                 const MessageData = await FormatData(await DataFromMessage(message));
                 const channel = await StoryGuild.channels.fetch(timer.ChannelId.toString());
                 await channel.send(MessageData);
@@ -42,16 +42,13 @@ async function TimerMessage(interaction) {
 }
 
 async function FormatData(data) {
-    for (const key in data) {
-        if (data[key] != null && typeof data[key] == 'object')
-            data[key] = await FormatData(data[key]);
-        else if (typeof data[key] == 'string')
-            data[key] = await FormatString(data[key]);
-    }
+    if (typeof data == 'object')
+        for (const key in data) data[key] = await FormatData(data[key]);
+    if (typeof data == 'string') data = await FormatString(data);
     return data;
 }
 
 async function FormatString(str) {
-    str = str.split('`').join('\\`');
-    return eval(`\`${str}\``)
+    const res = str.split('`').join('\\`');
+    return eval(`\`${res}\``);
 }
