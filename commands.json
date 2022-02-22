@@ -10,8 +10,8 @@
                     {
                         "name": "name",
                         "type": "STRING",
-                        "description": "문서 이름",
-                        "required": true
+                        "description": "문서 이름(설정하지 않으면 문서 목록을 불러옵니다)",
+                        "required": false
                     }
                 ],
                 "defaultPermission": true

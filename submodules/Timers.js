@@ -17,27 +17,32 @@ async function _setup(client) {
     const { id : ArchiveChannelId } = await SafeDB(stmt, 'get', 'archive');
     ArchiveChannel = await StudioGuild.channels.fetch(ArchiveChannelId.toString());
 
-    TimerMessage();
+    TimerMessage(client);
 }
 
-async function TimerMessage(interaction) {
+async function TimerMessage(client) {
     const stmt = 'SELECT * FROM timers';
     while (true) {
-        const timers = await SafeDB(stmt, 'all');
-        for (const timer of timers) {
-            const TimeFlag = BigInt(Date.now());
-            if (TimeFlag - timer.LastSent > timer.interval) {
-                const Ustmt = 'UPDATE timers SET LastSent = LastSent + ? WHERE MessageId = ?';
-                await SafeDB(Ustmt, 'run',
-                    (TimeFlag - timer.LastSent) / timer.interval * timer.interval,
-                    timer.MessageId);
-                const message = await ArchiveChannel.messages.fetch(timer.MessageId.toString(), { force : true });
-                const MessageData = await FormatData(await DataFromMessage(message));
-                const channel = await StoryGuild.channels.fetch(timer.ChannelId.toString());
-                await channel.send(MessageData);
+        try {
+            const timers = await SafeDB(stmt, 'all');
+            for (const timer of timers) {
+                const TimeFlag = BigInt(Date.now());
+                if (TimeFlag - timer.LastSent > timer.interval) {
+                    const Ustmt = 'UPDATE timers SET LastSent = LastSent + ? WHERE MessageId = ?';
+                    await SafeDB(Ustmt, 'run',
+                        (TimeFlag - timer.LastSent) / timer.interval * timer.interval,
+                        timer.MessageId);
+                    const message = await ArchiveChannel.messages.fetch(timer.MessageId.toString(), { force : true });
+                    const MessageData = await FormatData(await DataFromMessage(message));
+                    const channel = await StoryGuild.channels.fetch(timer.ChannelId.toString());
+                    const LastMessages = await channel.messages.fetch({ limit : 1 });
+                    let flag = true;
+                    for (const item of LastMessages) flag = item[1].author.id != client.user.id;
+                    if (flag) await channel.send(MessageData);
+                }
             }
-        }
-        await sleep(100);
+            await sleep(100);
+        } catch (e) { console.error(e); }
     }
 }
 

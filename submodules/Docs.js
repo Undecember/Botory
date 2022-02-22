@@ -34,7 +34,8 @@ async function cmd_docs(interaction) {
         return await interaction.reply({ content: '5분에 한 번만 쓸 수 있습니다.', ephemeral: true });
     const LastLastCall = LastCall;
     LastCall = Date.now();
-    const name = interaction.options.getString('name');
+    let name = interaction.options.getString('name');
+    if (name == null) name = '__list__';
     const stmt = 'SELECT * FROM docs WHERE name = ?';
     const doc = await SafeDB(stmt, 'get', name);
     if (doc === undefined) {
