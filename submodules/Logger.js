@@ -75,7 +75,7 @@ async function LogReactionEmoji(reaction, user, ActionType) {
                 EmojiName, EmojiId, EmojiURL, ActionType)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
         await SafeDB(stmt, 'run',
-            new Date().getTime(),
+            Date.now(),
             user.id,
             reaction.message.channel.id,
             reaction.message.id,

@@ -37,7 +37,7 @@ async function cmd_goraid(interaction) {
 
 async function AutoRaidMsg(client) {
     while (true) {
-        let timeflag = new Date().getTime();
+        let timeflag = Date.now();
         try {
             if (Math.random() * 10 < 1 || killflag) {
                 let price = null;

@@ -155,7 +155,7 @@ async function cmd_warn(interaction) {
         UserId,
         interaction.user.id,
         reason,
-        new Date().getTime());
+        Date.now());
     let user = await interaction.client.users.fetch(UserId);
     let fields = [];
     await interaction.reply({
@@ -171,7 +171,7 @@ async function cmd_warn(interaction) {
             }]
         }]
     });
-    let deadline = new Date().getTime() - BanTime;
+    let deadline = BigInt(Date.now()) - BanTime;
     stmt = `SELECT id FROM infractions WHERE UserId = ? AND timecode > ? LIMIT 5`;
     if ((await SafeDB(stmt, 'all', UserId, deadline)).length >= BanCount)
         await interaction.channel.send(

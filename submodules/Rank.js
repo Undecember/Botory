@@ -100,15 +100,15 @@ async function messageXPnMoney(message) {
         if (dat === undefined) {
             stmt = `INSERT INTO users (id, xp, money, LastChat)
                 VALUES (?, 20, 50, ?)`;
-            return await SafeDB(stmt, 'run', id, new Date().getTime());
+            return await SafeDB(stmt, 'run', id, Date.now());
         }
         let flag = false;
         if (dat.LastChat == null) flag = true;
-        if (!flag) flag = dat.LastChat + 1n * 60n * 1000n < new Date().getTime();
+        if (!flag) flag = dat.LastChat + 1n * 60n * 1000n < Date.now();
         if (flag) {
             stmt = `UPDATE users SET
                 xp = xp + 20, money = money + 50, LastChat = ? WHERE id = ?`;
-            await SafeDB(stmt, 'run', new Date().getTime(), id);
+            await SafeDB(stmt, 'run', Date.now(), id);
         }
     } catch (e) { console.error(e); }
 }
