@@ -74,6 +74,7 @@ async function FilterReaction(reaction, user) {
             row = await SafeDB(stmt, 'get', reaction.emoji.id);
         }
         if (row === undefined) return;
+        await reaction.remove();
         await warn(reaction.client, reaction.message.channel, user.id, row.comment);
     } catch (e) { console.error(e); }
 }
