@@ -2,7 +2,7 @@ const { ops } = require('../config.json');
 const { v4: uuid4 } = require('uuid');
 const { db, sleep, SafeDB } = require('../db.js');
 
-module.exports = { _setup };
+module.exports = { _setup, ban };
 
 function uuid4hex() {
     let buffer = Buffer.alloc(16);
@@ -15,7 +15,6 @@ async function _setup(client) {
     let stmt = 'SELECT id FROM guilds WHERE key = ?';
     const { id : StoryGuildId } = await SafeDB(stmt, 'get', 'story');
     StoryGuild = await client.guilds.fetch(StoryGuildId.toString());
-
     stmt = 'SELECT value FROM global WHERE key = ?';
     BanCount = (await SafeDB(stmt, 'get', 'BanCount')).value;
     BanTime = (await SafeDB(stmt, 'get', 'BanTime')).value;
@@ -155,7 +154,7 @@ async function cmd_warn(interaction) {
         UserId,
         interaction.user.id,
         reason,
-        new Date().getTime());
+        Date.now());
     let user = await interaction.client.users.fetch(UserId);
     let fields = [];
     await interaction.reply({
@@ -171,7 +170,7 @@ async function cmd_warn(interaction) {
             }]
         }]
     });
-    let deadline = new Date().getTime() - BanTime;
+    let deadline = BigInt(Date.now()) - BanTime;
     stmt = `SELECT id FROM infractions WHERE UserId = ? AND timecode > ? LIMIT 5`;
     if ((await SafeDB(stmt, 'all', UserId, deadline)).length >= BanCount)
         await interaction.channel.send(

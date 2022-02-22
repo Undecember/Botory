@@ -38,7 +38,7 @@ async function LogAttachment(message) {
         if (message.author === undefined) return;
         if (message.author.bot) return;
         if (message.attachments.size == 0) return;
-        files = []
+        let files = []
         for (data of message.attachments) files.push(data[1].url);
         AttachmentChannel.send({
             files: files,
@@ -70,12 +70,12 @@ async function LogReactionEmoji(reaction, user, ActionType) {
         if (reaction.message.guild === undefined) return;
         if (reaction.message.guild?.id != StoryGuild.id) return;
         if (user.bot) return;
-        stmt = `INSERT INTO ReactionLog
+        const stmt = `INSERT INTO ReactionLog
             (timecode, UserId, ChannelId, MessageId,
                 EmojiName, EmojiId, EmojiURL, ActionType)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
         await SafeDB(stmt, 'run',
-            new Date().getTime(),
+            Date.now(),
             user.id,
             reaction.message.channel.id,
             reaction.message.id,

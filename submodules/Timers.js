@@ -17,41 +17,43 @@ async function _setup(client) {
     const { id : ArchiveChannelId } = await SafeDB(stmt, 'get', 'archive');
     ArchiveChannel = await StudioGuild.channels.fetch(ArchiveChannelId.toString());
 
-    TimerMessage();
+    TimerMessage(client);
 }
 
-async function TimerMessage(interaction) {
+async function TimerMessage(client) {
     const stmt = 'SELECT * FROM timers';
     while (true) {
-        const timers = await SafeDB(stmt, 'all');
-        for (const timer of timers) {
-            const TimeFlag = BigInt(Date.now());
-            if (TimeFlag - timer.LastSent > timer.interval) {
-                const Ustmt = 'UPDATE timers SET LastSent = LastSent + ? WHERE MessageId = ?';
-                await SafeDB(Ustmt, 'run',
-                    (TimeFlag - timer.LastSent) / timer.interval * timer.interval,
-                    timer.MessageId);
-                const message = await ArchiveChannel.messages.fetch(timer.MessageId.toString());
-                const MessageData = await FormatData(await DataFromMessage(message));
-                const channel = await StoryGuild.channels.fetch(timer.ChannelId.toString());
-                await channel.send(MessageData);
+        try {
+            const timers = await SafeDB(stmt, 'all');
+            for (const timer of timers) {
+                const TimeFlag = BigInt(Date.now());
+                if (TimeFlag - timer.LastSent > timer.interval) {
+                    const Ustmt = 'UPDATE timers SET LastSent = LastSent + ? WHERE MessageId = ?';
+                    await SafeDB(Ustmt, 'run',
+                        (TimeFlag - timer.LastSent) / timer.interval * timer.interval,
+                        timer.MessageId);
+                    const message = await ArchiveChannel.messages.fetch(timer.MessageId.toString(), { force : true });
+                    const MessageData = await FormatData(await DataFromMessage(message));
+                    const channel = await StoryGuild.channels.fetch(timer.ChannelId.toString());
+                    const LastMessages = await channel.messages.fetch({ limit : 1 });
+                    let flag = true;
+                    for (const item of LastMessages) flag = item[1].author.id != client.user.id;
+                    if (flag) await channel.send(MessageData);
+                }
             }
-        }
-        await sleep(100);
+            await sleep(100);
+        } catch (e) { console.error(e); }
     }
 }
 
 async function FormatData(data) {
-    for (const key in data) {
-        if (data[key] != null && typeof data[key] == 'object')
-            data[key] = await FormatData(data[key]);
-        else if (typeof data[key] == 'string')
-            data[key] = await FormatString(data[key]);
-    }
+    if (typeof data == 'object')
+        for (const key in data) data[key] = await FormatData(data[key]);
+    if (typeof data == 'string') data = await FormatString(data);
     return data;
 }
 
 async function FormatString(str) {
-    str = str.split('`').join('\\`');
-    return eval(`\`${str}\``)
+    const res = str.split('`').join('\\`');
+    return eval(`\`${res}\``);
 }
