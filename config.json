@@ -4,6 +4,7 @@
     "submodules": [
         "Bank",
         "Docs",
+        "Filter",
         "Logger",
         "MessageManager",
         "Moderator",
