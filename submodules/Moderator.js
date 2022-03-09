@@ -32,6 +32,7 @@ async function _setup(client) {
             if (commandName === 'warn') return await cmd_warn(interaction);
             if (commandName === 'warns') return await cmd_warns(interaction);
             if (commandName === 'unwarn') return await cmd_unwarn(interaction);
+            if (commandName === 'slowmode') return await cmd_slowmode(interaction);
         } catch (e) {
             console.error(e);
             return await interaction.reply({ content: 'failed' });
@@ -203,4 +204,33 @@ async function cmd_warns(interaction) {
             fields: fields
         }]
     });
+}
+
+async function cmd_slowmode(interaction) {
+    const seconds = interaction.options.getInteger('seconds');
+    await interaction.channel.setRateLimitPerUser(seconds);
+    if (interaction.channel.isThread())
+        return await interaction.reply({ content : '이 스레드의 슬로우모드가 업데이트되었습니다.' });
+    await interaction.reply({ content : '슬로우 모드 업데이트중...' });
+    while (true) {
+        Fthreads = await interaction.channel.threads.fetchActive();
+        for (const item of Fthreads.threads) {
+            const thread = item[1];
+            await thread.setRateLimitPerUser(seconds);
+        }
+        if (!Fthreads.hasMore) break;
+    }
+    while (true) {
+        Fthreads = await interaction.channel.threads.fetchArchived();
+        for (const item of Fthreads.threads) {
+            const thread = item[1];
+            const locked = thread.locked;
+            await thread.setArchived(false);
+            await thread.setRateLimitPerUser(seconds);
+            await thread.setArchived(true);
+            if (locked) await thread.setLocked(true);
+        }
+        if (!Fthreads.hasMore) break;
+    }
+    return await interaction.editReply({ content : '이 채널과 모든 하위 스레드의 슬로우모드가 업데이트되었습니다.' });
 }

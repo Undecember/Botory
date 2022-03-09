@@ -2,6 +2,35 @@
     "commands": [
         {
             "GuildId": "775210688183664640",
+            "permissions": [
+                {
+                    "id": "751073808223305750",
+                    "type": "USER",
+                    "permission": true
+                },
+                {
+                    "id": "603897276410101789",
+                    "type": "USER",
+                    "permission": true
+                }
+            ],
+            "data": {
+                "name": "slowmode",
+                "type": 1,
+                "description": "슬로우모드를 설정합니다",
+                "options": [
+                    {
+                        "name": "seconds",
+                        "type": "INTEGER",
+                        "description": "시간",
+                        "required": true
+                    }
+                ],
+                "defaultPermission": false
+            }
+        },
+        {
+            "GuildId": "775210688183664640",
             "data": {
                 "name": "docs",
                 "type": 1,
