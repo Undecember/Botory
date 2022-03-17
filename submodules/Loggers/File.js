@@ -17,12 +17,12 @@ async function _setup(client) {
 
 async function LogFile(message) {
     try {
-        if (message.guild.id != StoryGuild.id) return;
+        if (message.guild?.id != StoryGuild.id) return;
         if (message.author.bot) return;
         if (message.attachments.size == 0) return;
-        files = []
+        let files = []
         for (data of message.attachments) files.push(data[1].url);
-        AttachmentChannel.send({
+        await FileChannel.send({
             files: files,
             embeds: [{
                 author: {
@@ -43,6 +43,6 @@ async function LogFile(message) {
                     }
                 ]
             }]
-        }).catch(console.error);
+        });
     } catch (e) { console.error(e); }
 }
