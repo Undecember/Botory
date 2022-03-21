@@ -3,6 +3,7 @@
 	"intents": "11111111111111",
     "submodules": [
         "Bank",
+        "BoostEvent",
         "Docs",
         "Filter",
         "Logger",

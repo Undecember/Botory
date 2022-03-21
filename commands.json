@@ -300,23 +300,6 @@
         },
         {
             "GuildId": "775210688183664640",
-            "permissions": [
-                {
-                    "id": "751073808223305750",
-                    "type": "USER",
-                    "permission": true
-                },
-                {
-                    "id": "603897276410101789",
-                    "type": "USER",
-                    "permission": true
-                },
-                {
-                    "id": "775338376467316786",
-                    "type": "ROLE",
-                    "permission": true
-                }
-            ],
             "data": {
                 "name": "warns",
                 "type": 1,
@@ -326,10 +309,10 @@
                         "name": "user",
                         "type": "USER",
                         "description": "확인할 사용자",
-                        "required": true
+                        "required": false
                     }
                 ],
-                "defaultPermission": false
+                "defaultPermission": true
             }
         },
         {
