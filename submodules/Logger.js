@@ -13,7 +13,7 @@ async function _setup(client) {
         const { _setup : __setup } = require('./Loggers/' + submodule + '.js');
         __setup(client);
     }
-    AutoAudit();
+    //AutoAudit();
 }
 
 async function AutoAudit() {
