@@ -41,5 +41,6 @@ async function Notify(VideoId) {
             `새로운 영상이 올라왔어요!\nhttps://youtu.be/${VideoId}`);
         await message.react('👍');
         await message.react('👎');
+        await message.crosspost();
     } catch (e) { console.error(e); }
 }
