@@ -1,0 +1,3 @@
+[submodule "dppLibs"]
+	path = dppLibs
+	url = https://github.com/undecember/dppLibs
